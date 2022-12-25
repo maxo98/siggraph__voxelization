@@ -1,12 +1,7 @@
-#include "Shader.h"
 #include "Window.h"
-#include "Quadrilatere.h"
-#include "Line.h"
 
 #include <math.h>
 
-#define GL3_PROTOTYPES 1
-#include <GL/glew.h>
 #include <SDL.h>
  
 #define PI 3.14159265
@@ -50,37 +45,37 @@
 
 int worldMap[mapWidth][mapHeight][mapDepth] = {0};
 
-const GLfloat bot[5][3] = {
+const float bot[5][3] = {
 	{ -1.0,  -1.0, 0.0}, 
 	{  1.0,  -1.0, 0.0}, 
 	{  1.0, 0.0, 0.0},
 	{  -1.0, 0.0, 0.0}
 };
 
-const GLfloat top[5][3] = {
+const float top[5][3] = {
 	{ -1.0,  0.0, 0.0}, 
 	{  1.0,  0.0, 0.0}, 
 	{  1.0, 1.0, 0.0},
 	{  -1.0, 1.0, 0.0}
 };
 
-const GLfloat rouge[4] = { 1.0f, 0.0, 0.0, 1.0 };
-const GLfloat ombreRouge[4] = { 0.7, 0.0, 0.0, 1.0 };
+const float rouge[4] = { 1.0f, 0.0, 0.0, 1.0 };
+const float ombreRouge[4] = { 0.7, 0.0, 0.0, 1.0 };
 
-const GLfloat vert[4] = { 0.0, 1.0, 0.0, 1.0};
-const GLfloat ombreVert[4] = { 0.0, 0.7, 0.0, 1.0 };
+const float vert[4] = { 0.0, 1.0, 0.0, 1.0};
+const float ombreVert[4] = { 0.0, 0.7, 0.0, 1.0 };
 
-const GLfloat bleu[4] = { 0.0, 0.0, 1.0, 1.0 };
-const GLfloat ombreBleu[4] = { 0.0, 0.0, 0.7, 1.0 };
+const float bleu[4] = { 0.0, 0.0, 1.0, 1.0 };
+const float ombreBleu[4] = { 0.0, 0.0, 0.7, 1.0 };
 
-const GLfloat ciel[4] = { 0.3, 0.5, 0.6, 1.0 };
-const GLfloat noir[4] = { 0.0, 0.0, 0.0, 1.0 };
+const float ciel[4] = { 0.3, 0.5, 0.6, 1.0 };
+const float noir[4] = { 0.0, 0.0, 0.0, 1.0 };
 
-void pollEvents(Fenetre &_fenetre, SDL_Event &_keyboard, int &_mouse) {//Input
+void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouse) {//Input
 	SDL_Event event;
 
 	if (SDL_PollEvent(&event)) {
-		_fenetre.pollEvents(event);
+		_window.pollEvents(event);
 		_keyboard = event;
 		
 		if(event.type == SDL_MOUSEMOTION)
@@ -94,7 +89,9 @@ void pollEvents(Fenetre &_fenetre, SDL_Event &_keyboard, int &_mouse) {//Input
 
 int main(int argc, char *argv[])
 {
-	Fenetre fenetre("Raycaster V1.0", windowWidth, windowHeight);
+	Window window("Raycaster V1.0", windowWidth, windowHeight);
+
+	window.clear();
 
 	int timer = 0;
 	int i, cpt;
@@ -161,7 +158,7 @@ int main(int argc, char *argv[])
 	//Distance d'un coté X ou Y vers un coté respectivement X ou Y
 	double perpWallDist;
 	double deltaDistX;
-      	double deltaDistY;
+    double deltaDistY;
 
 	bool hit; //was there a wall hit?
 	int side; //coté du mur touché Nord/Sud ou Est/Ouest
@@ -171,35 +168,14 @@ int main(int argc, char *argv[])
 	double drawStart;//Position de la ligne
 	double drawEnd;
 
-	Shader shader("E:\\Cedric\\ESGI\\Raycaster\\x64\\Debug\\VertexShader.vert","E:\\Cedric\\ESGI\\Raycaster\\x64\\Debug\\FragShader1.frag");////////////Shader
-
-	// Set up shader ( will be covered in the next part )
-	// ===================
-	if (!shader.getInit())
-		return false;
-
-	glUseProgram(shader.getShader());
-
-	uniformLocation = glGetUniformLocation(shader.getShader(), "type");
-	glUniform1i(uniformLocation, 0);
-
-	Quadrilatere sol(bot, noir);//////////Objets
-	Line wall(top, noir);
-
-
 	SDL_ShowCursor(SDL_DISABLE);////////Options fenêtre SDL
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
-	SDL_SetWindowGrab(Fenetre::_window,SDL_TRUE);
-	SDL_WarpMouseInWindow(Fenetre::_window,windowWidth/2,windowHeight/2);
+	SDL_SetWindowGrab(window.getWindow(), SDL_TRUE);
+	SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 
-	glClearColor(0.3, 0.5, 0.6, 1.0);//////Premier affichage (fond couleur)
-	glClear(GL_COLOR_BUFFER_BIT);
-	SDL_GL_SwapWindow(Fenetre::_window);
-
-
-	while (!fenetre.isClosed())///////////////////////////////////////////////////////////////////////////////Main loop
+	while (!window.isClosed())///////////////////////////////////////////////////////////////////////////////Main loop
 	{
-		pollEvents(fenetre, keyboard, mouse);///////////////////////Entré Clavier
+		pollEvents(window, keyboard, mouse);///////////////////////Entré Clavier
 		if(SDLK_b && keyboard.type == SDL_KEYDOWN)
 		{
 			switch(keyboard.key.keysym.sym)
@@ -225,8 +201,7 @@ int main(int argc, char *argv[])
 
 		if(timer + 42 < SDL_GetTicks())////////////////////Affichage
 		{
-
-			glClear(GL_COLOR_BUFFER_BIT);
+			window.clear();
 			motion_x = 0;
 
 			if(lastMouse != mouse)//////Rotation Camera
@@ -242,11 +217,11 @@ int main(int argc, char *argv[])
 			    planeY = oldPlaneX * sin(motion_x) + planeY * cos(motion_x);
 
 
-				SDL_WarpMouseInWindow(Fenetre::_window,windowWidth/2,windowHeight/2);
+				SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 				
 			}
 
-			sol.renderFill();
+			//sol.renderFill();
 			for(int x = 0; x < windowWidth; x++)/////////////////////////Raycasting
 			{
 				//Calcul la position et direction du rayon
@@ -331,21 +306,21 @@ int main(int argc, char *argv[])
 					
 				      	switch(worldMap[mapX][mapY][0])
 				      	{
-						case 1:  wall.setColors(rouge);  break; 
-						case 2:  wall.setColors(bleu);  break; 
-						case 3:  wall.setColors(bleu);   break; 
-						case 4:  wall.setColors(vert);  break; 
-						default: wall.setColors(vert); break; 
+						//case 1:  wall.setColors(rouge);  break; 
+						//case 2:  wall.setColors(bleu);  break; 
+						//case 3:  wall.setColors(bleu);   break; 
+						//case 4:  wall.setColors(vert);  break; 
+						//default: wall.setColors(vert); break; 
 				      	}
 				}else{
 
 					switch(worldMap[mapX][mapY][0])
 				      	{
-						case 1:  wall.setColors(ombreRouge);  break; 
-						case 2:  wall.setColors(ombreBleu);  break; 
-						case 3:  wall.setColors(ombreBleu);   break; 
-						case 4:  wall.setColors(ombreVert);  break; 
-						default: wall.setColors(ombreVert); break; 
+						//case 1:  wall.setColors(ombreRouge);  break; 
+						//case 2:  wall.setColors(ombreBleu);  break; 
+						//case 3:  wall.setColors(ombreBleu);   break; 
+						//case 4:  wall.setColors(ombreVert);  break; 
+						//default: wall.setColors(ombreVert); break; 
 				      	}
 
 				}
@@ -355,17 +330,17 @@ int main(int argc, char *argv[])
 
 				wall_vertex[0][1] = drawEnd;
 				wall_vertex[1][1] = drawStart;
-				
 
-				wall.setVertex(wall_vertex);
-				
-				wall.renderFill();//Affichage de la ligne
+				for (int i = drawStart* windowHeight + windowHeight/2; i < drawEnd * windowHeight + windowHeight / 2; i++)
+				{
+					window.setPixelColor(glm::vec2(x, i), glm::vec3(255, 0, 0));
+				}
 				
 			}
 
 			timer = SDL_GetTicks();
 			
-			SDL_GL_SwapWindow(Fenetre::_window);//Affichage du buffer
+			SDL_RenderPresent(Window::renderer);
 		}
 	}
 

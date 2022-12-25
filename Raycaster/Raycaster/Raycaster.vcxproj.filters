@@ -14,22 +14,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Line.cpp">
-      <Filter>Fichiers source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Quadrilatere.cpp">
-      <Filter>Fichiers source</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Raycaster.cpp">
-      <Filter>Fichiers source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Shader.cpp">
-      <Filter>Fichiers source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\stb_image.cpp">
-      <Filter>Fichiers source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Texture.cpp">
       <Filter>Fichiers source</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Window.cpp">
@@ -37,21 +22,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\Line.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Quadrilatere.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Shader.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\stb_image.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\Texture.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Window.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
