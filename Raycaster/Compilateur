@@ -1,0 +1,27 @@
+#!/bin/bash
+#cd Documents/First_OpenGL
+
+cd src
+
+var=(`grep $1.cpp -e "\#include \"" | cut -d "\"" -f 2 | cut -d "." -f 1`) #on récupère les include
+
+let "imax = ${#var[@]} - 1" #on recupere le nombre d\'include trouver
+
+comp=""
+
+for i in `seq 0 $imax`;
+	do if [ -e ${var[i]}".cpp" ]
+		then comp=$comp${var[i]}".cpp "
+		else echo ${var[i]}".cpp introuvable"
+	fi
+done
+
+g++ $1.cpp $comp -std=gnu++0x `sdl2-config --cflags --libs` -fpermissive -lSDL2_mixer -lGL -lGLEW #on compile le tout
+#g++ $1.cpp $comp -lSDL
+
+cd ../
+
+if(mv src/a.out bin/$1.out) #et on déplace et renomme l\'exe
+	then cd bin
+	./$1.out
+fi
