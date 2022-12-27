@@ -1,17 +1,12 @@
 #include "Window.h"
 
-#include <math.h>
-
 #include <SDL.h>
 #include <gtx/quaternion.hpp>
- 
-#define PI 3.14159265
+#include "VoxelScene.h"
+#include "ThreadPool.h"
+#include <iomanip>
 
 #define PROGRAM_NAME "Raycaster V1.0"
-
-#define mapWidth 24
-#define mapHeight 24
-#define mapDepth 3
 
 #define windowWidth 1920
 #define windowHeight 1080
@@ -44,8 +39,6 @@
 //  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 //};
 
-int worldMap[mapWidth][mapDepth][mapHeight] = {0};
-
 const float rouge[4] = { 1.0f, 0.0, 0.0, 1.0 };
 const float vert[4] = { 0.0, 1.0, 0.0, 1.0};
 const float bleu[4] = { 0.0, 0.0, 1.0, 1.0 };
@@ -68,6 +61,9 @@ void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouse) {//Input
 
 int main(int argc, char *argv[])
 {
+	ThreadPool* pool = ThreadPool::getInstance();
+	pool->start();
+
 	Window window("Raycaster V1.0", windowWidth, windowHeight);
 
 	window.clear();
@@ -82,43 +78,25 @@ int main(int argc, char *argv[])
 	int mouse = 0;
 
 	float mouvSpeed = 0.3;
-	
-	for (int x = 0; x < mapWidth; x++)
-	{
-		for (int y = 0; y < mapDepth; y++)
-		{
-			for (int z = 0; z < mapHeight; z++)
-			{
-				worldMap[x][y][z] = 0;
-			}
-		}
-	}
 
-
-	for (int x = 20; x < 25; x++)
-	{
-		for (int y = 1; y < mapDepth; y++)
-		{
-			for (int z = 20; z < 25; z++)
-			{
-				worldMap[x][y][z] = 1;
-			}
-		}
-	}
-
-	glm::vec3 pos(22, 0, 12);  //x and y start position
-	
 	//Camera variables
-	float heightStep = 1 / (float)windowHeight;
-	float wdithStep = 1 / (float)windowWidth;
-	float fov = 30, aspectratio = windowWidth / float(windowHeight);
-	float angle = tan(M_PI * 0.5 * fov / 180.);
+	glm::vec3 pos(22, 0, 12);  //x and y start position
 	glm::quat camRot;
+
+	Camera cam(pos, camRot, 30, windowWidth, windowHeight);
 
 	SDL_ShowCursor(SDL_DISABLE);////////Options fenêtre SDL
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
 	SDL_SetWindowGrab(window.getWindow(), SDL_TRUE);
 	SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
+
+	VoxelScene scene;
+	std::vector<std::vector<Color>> buffer;
+
+	buffer.resize(windowWidth, std::vector<Color>(windowHeight, Color(0,0,0)));
+
+	bool first = true;
+
 
 	while (!window.isClosed())///////////////////////////////////////////////////////////////////////////////Main loop
 	{
@@ -159,118 +137,56 @@ int main(int argc, char *argv[])
 				
 			}
 
-			//sol.renderFill();
+			time_t start, end;
+
+			if (first == true)
+			{
+				time(&start);
+				std::ios_base::sync_with_stdio(false);
+			}
+
+			std::deque<std::atomic<bool>> tickets;
+
 			for(int x = 0; x < windowWidth; x++)/////////////////////////Raycasting
 			{
 				for (int y = 0; y < windowHeight; y++)
 				{
-					//Calcul la position et direction du rayon
-					float xx = (2 * ((x + 0.5) * wdithStep) - 1) * angle * aspectratio;
-					float yy = (1 - 2 * ((y + 0.5) * heightStep)) * angle;
+					tickets.emplace_back(false);
 
-					glm::vec3 rayDir = camRot * glm::normalize(glm::vec3(xx, yy, 1));
-
-					int mapX, mapY, mapZ;//Case in which the ray currently is
-
-					//In which direction we're going for each axis (either +1, or -1)
-					int stepX, stepY, stepZ;
-
-					glm::vec3 sideDist;
-					glm::vec3 deltaDist;
-
-					//Dans quel case de la carte on se trouve
-					mapX = int(pos.x);
-					mapY = int(pos.y);
-					mapZ = int(pos.z);
-
-					//Distance d'un coté X ou Y vers un coté respectivement X ou Y
-					deltaDist.x = fabs(1 / rayDir.x);
-					deltaDist.y = fabs(1 / rayDir.y);
-					deltaDist.z = fabs(1 / rayDir.z);
-
-					//calculate step and initial sideDist
-					if (rayDir.x < 0)
-					{
-						stepX = -1;
-						sideDist.x = (pos.x - mapX) * deltaDist.x;
-					}
-					else
-					{
-						stepX = 1;
-						sideDist.x = (mapX + 1.0 - pos.x) * deltaDist.x;
-					}
-
-					if (rayDir.y < 0)
-					{
-						stepY = -1;
-						sideDist.y = (pos.y - mapY) * deltaDist.y;
-					}
-					else
-					{
-						stepY = 1;
-						sideDist.y = (mapY + 1.0 - pos.y) * deltaDist.y;
-					}
-
-					if (rayDir.z < 0)
-					{
-						stepZ = -1;
-						sideDist.z = (pos.z - mapZ) * deltaDist.z;
-					}
-					else
-					{
-						stepZ = 1;
-						sideDist.z = (mapZ + 1.0 - pos.z) * deltaDist.z;
-					}
-
-					bool hit = false; //was there a wall hit?
-					int side;//Axis on which the the voxel was hit
-
-					//Test case par case
-					while (hit == false && mapX < mapWidth && mapX >= 0 && mapY < mapDepth && mapY >= 0 && mapZ < mapHeight && mapZ >= 0)
-					{
-						//jump to next map square, OR in x-direction, OR in y-direction
-						if (sideDist.x < sideDist.y)
-						{
-							if (sideDist.x < sideDist.z)
-							{
-								sideDist.x += deltaDist.x;
-								mapX += stepX;
-								side = 0;
-							}
-							else {
-								sideDist.z += deltaDist.z;
-								mapZ += stepZ;
-								side = 2;
-							}
-						}
-						else
-						{
-							if (sideDist.y < sideDist.z)
-							{
-								sideDist.y += deltaDist.y;
-								mapY += stepY;
-								side = 1;
-							}
-							else {
-								sideDist.z += deltaDist.z;
-								mapZ += stepZ;
-								side = 2;
-							}
-						}
-
-						//Check if ray has hit a wall
-						if (worldMap[mapX][mapY][mapZ] > 0) hit = true;
-					}
-
-					if (hit == false) continue;
-
-					window.setPixelColor(glm::vec2(x, y), glm::vec3(255, 0, 0));
+					pool->queueJob(&VoxelScene::drawPixel, &scene, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
 				}
 			}
 
 			timer = SDL_GetTicks();
-			
+
+			for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
+			{
+				itTicket->wait(false);
+			}
+
+			for (int x = 0; x < windowWidth; x++)/////////////////////////Raycasting
+			{
+				for (int y = 0; y < windowHeight; y++)
+				{
+					window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
+				}
+			}
+
+
 			SDL_RenderPresent(Window::renderer);
+
+			if (first == true)
+			{
+				first = false;
+
+				time(&end);
+
+				// Calculating total time taken by the program.
+				double time_taken = double(end - start);
+				std::cout << "Time taken by program is : " << std::fixed
+					<< time_taken << std::setprecision(5);
+				std::cout << " sec " << std::endl;
+			}
 		}
 	}
 
