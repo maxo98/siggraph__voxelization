@@ -11,6 +11,8 @@
 #define windowWidth 1920
 #define windowHeight 1080
 
+#define MULTITHREAD
+
 //const int worldMap[mapWidth][mapHeight][mapDepth]=
 //{
 //  {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -93,7 +95,7 @@ int main(int argc, char *argv[])
 	VoxelScene scene;
 	std::vector<std::vector<Color>> buffer;
 
-	buffer.resize(windowWidth, std::vector<Color>(windowHeight, Color(0,0,0)));
+	buffer.resize(windowWidth, std::vector<Color>(windowHeight, Color(0,0,255)));
 
 	bool first = true;
 
@@ -145,17 +147,81 @@ int main(int argc, char *argv[])
 				std::ios_base::sync_with_stdio(false);
 			}
 
+			//std::deque<std::atomic<bool>> tickets;
+
+			//for(int x = 0; x < windowWidth; x++)/////////////////////////Raycasting
+			//{
+			//	for (int y = 0; y < windowHeight; y++)
+			//	{
+			//		//tickets.emplace_back(false);
+
+			//		//pool->queueJob(&VoxelScene::drawPixel, &scene, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
+			//	}
+			//}
+
+			int threads = 1;
+			unsigned int cpus = std::thread::hardware_concurrency();
+
+			float totalWorkload = windowWidth * windowHeight;
+			float workload = totalWorkload / cpus;
+			float restWorkload = 0;
+			int currentWorkload = totalWorkload;
+			int startIndex = 0;
+			int count = 0;
+
 			std::deque<std::atomic<bool>> tickets;
 
-			for(int x = 0; x < windowWidth; x++)/////////////////////////Raycasting
-			{
-				for (int y = 0; y < windowHeight; y++)
-				{
-					tickets.emplace_back(false);
+			int x = 0, y = 0;
 
-					pool->queueJob(&VoxelScene::drawPixel, &scene, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
-				}
+#ifdef MULTITHREAD
+			while (workload < 1)
+			{
+				cpus--;
+				workload = totalWorkload / cpus;
 			}
+
+			while (cpus > threads)
+			{
+				currentWorkload = floor(workload);
+				float workloadFrac = fmod(workload, 1.0f);
+				restWorkload = workloadFrac;
+
+				tickets.emplace_back(false);
+				pool->queueJob(&VoxelScene::drawPixel, &scene, currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
+				++threads;
+
+				x += currentWorkload / windowHeight;
+				y += fmod(currentWorkload / float(windowHeight), 1.0f) * windowHeight;
+
+				if (y >= windowHeight)
+				{
+					x++;
+					y -= windowHeight;
+				}
+
+				count += currentWorkload + floor(restWorkload);
+				startIndex += currentWorkload + floor(restWorkload);
+
+				restWorkload -= floor(restWorkload);
+				restWorkload += workloadFrac;
+			}
+
+			while (restWorkload > 0)
+			{
+				restWorkload--;
+				currentWorkload++;
+			}
+#endif // MULTITHREAD
+
+			count += currentWorkload;
+
+			while (count > totalWorkload)
+			{
+				currentWorkload--;
+				count--;
+			}
+
+			scene.drawPixel(currentWorkload, x, y, window, cam, buffer);
 
 			timer = SDL_GetTicks();
 
@@ -171,7 +237,6 @@ int main(int argc, char *argv[])
 					window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
 				}
 			}
-
 
 			SDL_RenderPresent(Window::renderer);
 

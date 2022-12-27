@@ -118,32 +118,39 @@ bool VoxelScene::traceRay(glm::vec3 rayDir, glm::vec3 pos, Color& color)
 }
 
 
-void VoxelScene::drawPixel(int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket)
+void VoxelScene::drawPixel(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket)
 {
-	//Calcul la position et direction du rayon
-	float xx = (2 * ((x + 0.5) * camera.wdithStep) - 1) * camera.angle * camera.aspectratio;
-	float yy = (1 - 2 * ((y + 0.5) * camera.heightStep)) * camera.angle;
-
-	glm::vec3 rayDir = camera.camRot * glm::normalize(glm::vec3(xx, yy, 1));
-
-	Color color;
-
-	if (traceRay(rayDir, camera.pos, color) == true)
+	for (int i = 0; i < workload; i++)
 	{
-		//mtx.lock();
-		//window.setPixelColor(glm::vec2(x, y), color);
-		//mtx.unlock();
+		//Calcul la position et direction du rayon
+		float xx = (2 * ((x + 0.5) * camera.wdithStep) - 1) * camera.angle * camera.aspectratio;
+		float yy = (1 - 2 * ((y + 0.5) * camera.heightStep)) * camera.angle;
 
-		buffer[x][y] = color;
-	}
-	else {
-		buffer[x][y] = Color(0, 0, 0);
-	}
+		glm::vec3 rayDir = camera.camRot * glm::normalize(glm::vec3(xx, yy, 1));
 
-	if (ticket != nullptr)
-	{
-		(*ticket) = true;
-		ticket->notify_one();
+		Color color;
+
+		if (traceRay(rayDir, camera.pos, color) == true)
+		{
+			buffer[x][y] = color;
+		}
+		else {
+			buffer[x][y] = Color(0, 0, 0);
+		}
+
+		if (ticket != nullptr)
+		{
+			(*ticket) = true;
+			ticket->notify_one();
+		}
+
+		y++;
+
+		if (y >= camera.windowHeight)
+		{
+			x++;
+			y -= camera.windowHeight;
+		}
 	}
 }
 

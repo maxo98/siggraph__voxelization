@@ -18,12 +18,10 @@ public:
 
 	bool traceRay(glm::vec3 rayDir, glm::vec3 pos, Color& color);
 
-	void drawPixel(int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket = nullptr);
+	void drawPixel(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket = nullptr);
 
 private:
 
 	Voxel worldMap[mapWidth][mapDepth][mapHeight] = {};
-
-	std::mutex mtx;
 };
 
