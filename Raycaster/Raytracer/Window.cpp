@@ -37,7 +37,7 @@ bool Window::init()
 		return 0;
 	}
 
-	renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	if (renderer == nullptr)
 	{
