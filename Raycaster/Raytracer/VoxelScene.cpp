@@ -15,22 +15,31 @@ VoxelScene::VoxelScene()
 	}
 }
 
-bool VoxelScene::traceRay(glm::vec3 rayDir, glm::vec3 pos, Color& color)
+bool VoxelScene::traceRay(const glm::vec3& rayDir, const glm::uvec3& pos, Color& color, glm::uvec3& hitPos, glm::uvec3* destination)
 {
-	int mapX, mapY, mapZ;//Case in which the ray currently is
+	//We should do stuff here later on
+	return traceRay(rayDir, glm::vec3(pos), color, hitPos, destination);
+}
 
-					//In which direction we're going for each axis (either +1, or -1)
+bool VoxelScene::traceRay(const glm::vec3& rayDir, const glm::vec3& pos, Color& color, glm::uvec3& hitPos, glm::uvec3* destination)
+{
+	glm::uvec3 map;//Case in which the ray currently is
+	map.x = int(pos.x);
+	map.y = int(pos.y);
+	map.z = int(pos.z);
+
+	hitPos = map;
+
+	//In which direction we're going for each axis (either +1, or -1)
 	int stepX, stepY, stepZ;
 
 	glm::vec3 sideDist;
 	glm::vec3 deltaDist;
 
-	//Dans quel case de la carte on se trouve
-	mapX = int(pos.x);
-	mapY = int(pos.y);
-	mapZ = int(pos.z);
+	//In which case of the map we are
 
-	//Distance d'un coté X ou Y vers un coté respectivement X ou Y
+
+	//Distance to another case on each axis
 	deltaDist.x = fabs(1 / rayDir.x);
 	deltaDist.y = fabs(1 / rayDir.y);
 	deltaDist.z = fabs(1 / rayDir.z);
@@ -39,61 +48,69 @@ bool VoxelScene::traceRay(glm::vec3 rayDir, glm::vec3 pos, Color& color)
 	if (rayDir.x < 0)
 	{
 		stepX = -1;
-		sideDist.x = (pos.x - mapX) * deltaDist.x;
+		sideDist.x = (pos.x - map.x) * deltaDist.x;
 	}
 	else
 	{
 		stepX = 1;
-		sideDist.x = (mapX + 1.0 - pos.x) * deltaDist.x;
+		sideDist.x = (map.x + 1.0 - pos.x) * deltaDist.x;
 	}
 
 	if (rayDir.y < 0)
 	{
 		stepY = -1;
-		sideDist.y = (pos.y - mapY) * deltaDist.y;
+		sideDist.y = (pos.y - map.y) * deltaDist.y;
 	}
 	else
 	{
 		stepY = 1;
-		sideDist.y = (mapY + 1.0 - pos.y) * deltaDist.y;
+		sideDist.y = (map.y + 1.0 - pos.y) * deltaDist.y;
 	}
 
 	if (rayDir.z < 0)
 	{
 		stepZ = -1;
-		sideDist.z = (pos.z - mapZ) * deltaDist.z;
+		sideDist.z = (pos.z - map.z) * deltaDist.z;
 	}
 	else
 	{
 		stepZ = 1;
-		sideDist.z = (mapZ + 1.0 - pos.z) * deltaDist.z;
+		sideDist.z = (map.z + 1.0 - pos.z) * deltaDist.z;
 	}
 
 	bool hit = false; //was there a wall hit?
 	int side;//Axis on which the the voxel was hit
 
-	//Test case par case
-	while (hit == false && mapX < mapWidth && mapX >= 0 && mapY < mapDepth && mapY >= 0 && mapZ < mapHeight && mapZ >= 0)
+	//Test case by case
+	while (hit == false && map.x < mapWidth && map.x >= 0 && map.y < mapDepth && map.y >= 0 && map.z < mapHeight && map.z >= 0)
 	{
 		//Check if ray has hit a wall
-		if (worldMap[mapX][mapY][mapZ].isEmpty == false)
+		if (worldMap[map.x][map.y][map.z].isEmpty == false)
 		{
 			hit = true;
-			color = worldMap[mapX][mapY][mapZ].color;
+			color = worldMap[map.x][map.y][map.z].color;
 		}
 		else {
+
+			hitPos = map;
+
+			if (destination != nullptr && destination->x == map.x && destination->y == map.y && destination->z == map.z)
+			{
+				return hit;
+			}
+
 			//jump to next map square, OR in x-direction, OR in y-direction
 			if (sideDist.x < sideDist.y)
 			{
 				if (sideDist.x < sideDist.z)
 				{
 					sideDist.x += deltaDist.x;
-					mapX += stepX;
+					map.x += stepX;
 					side = 0;
 				}
 				else {
 					sideDist.z += deltaDist.z;
-					mapZ += stepZ;
+					map.z += stepZ;
 					side = 2;
 				}
 			}
@@ -102,12 +119,12 @@ bool VoxelScene::traceRay(glm::vec3 rayDir, glm::vec3 pos, Color& color)
 				if (sideDist.y < sideDist.z)
 				{
 					sideDist.y += deltaDist.y;
-					mapY += stepY;
+					map.y += stepY;
 					side = 1;
 				}
 				else {
 					sideDist.z += deltaDist.z;
-					mapZ += stepZ;
+					map.z += stepZ;
 					side = 2;
 				}
 			}
@@ -118,21 +135,43 @@ bool VoxelScene::traceRay(glm::vec3 rayDir, glm::vec3 pos, Color& color)
 }
 
 
-void VoxelScene::drawPixel(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket)
+void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket)
 {
 	for (int i = 0; i < workload; i++)
 	{
-		//Calcul la position et direction du rayon
+		//Compute position and direction of a ray
 		float xx = (2 * ((x + 0.5) * camera.wdithStep) - 1) * camera.angle * camera.aspectratio;
 		float yy = (1 - 2 * ((y + 0.5) * camera.heightStep)) * camera.angle;
 
 		glm::vec3 rayDir = camera.camRot * glm::normalize(glm::vec3(xx, yy, 1));
 
 		Color color;
+		glm::uvec3 hitPos;
 
-		if (traceRay(rayDir, camera.pos, color) == true)
+		if (traceRay(rayDir, camera.pos, color, hitPos) == true)
 		{
-			buffer[x][y] = color;
+			bool hitByLight = false;
+
+			for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
+			{
+				glm::uvec3 filler;
+
+				rayDir = glm::normalize(glm::vec3(pointLights[i] - hitPos));
+
+				if (traceRay(rayDir, hitPos, color, filler, &pointLights[i]) == false)
+				{
+					hitByLight = true;
+				}
+			}
+
+			if (hitByLight == true)
+			{
+				buffer[x][y] = color;
+			}
+			else {
+				buffer[x][y] = Color(0, 0, 0);
+			}
+			
 		}
 		else {
 			buffer[x][y] = Color(0, 0, 0);

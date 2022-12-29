@@ -1,6 +1,6 @@
 #include "Color.h"
 
-Color::Color(unsigned char _r, unsigned char _g, unsigned char _b)
+Color::Color(uint8_t _r, uint8_t _g, uint8_t _b)
 {
 	r = _r;
 	g = _g;

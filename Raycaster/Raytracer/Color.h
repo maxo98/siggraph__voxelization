@@ -1,10 +1,11 @@
 #pragma once
+#include <cstdint>
 
 struct Color
 {
 public:
-	Color(unsigned char _r = 0, unsigned char _g = 0, unsigned char _b = 0);
+	Color(uint8_t _r = 0, uint8_t _g = 0, uint8_t _b = 0);
 
-	unsigned char r, g, b;
+	uint8_t r, g, b;
 };
 
