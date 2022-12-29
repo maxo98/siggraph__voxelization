@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 
 	VoxelScene scene;
 
-	scene.addPointLight(glm::uvec3(22, 0, 12));
+	scene.addPointLight(glm::uvec3(0, 4, 0));
 
 	std::vector<std::vector<Color>> buffer;
 
