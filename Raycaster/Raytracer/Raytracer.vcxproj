@@ -24,16 +24,15 @@
     <ClCompile Include="Raytracer.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="Utils.cpp" />
-    <ClCompile Include="Voxel.cpp" />
     <ClCompile Include="VoxelScene.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="Octree.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="Voxel.h" />
     <ClInclude Include="VoxelScene.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>

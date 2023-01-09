@@ -36,3 +36,18 @@ std::ostream& operator<<(std::ostream& os, const glm::uvec3& dt)
 
 	return os;
 }
+
+bool intersectPlane(const glm::vec3& normal, const glm::vec3 &posPlane, const glm::vec3& posRay, const glm::vec3& rayDir, float& t)
+{
+	// assuming vectors are all normalized
+	float denom = glm::dot(normal, rayDir);
+
+	if (denom > 1e-6) 
+	{
+		glm::vec3 dir = posPlane - posRay;
+		t = glm::dot(dir, normal) / denom;
+		return (t >= 0);
+	}
+
+	return false;
+}

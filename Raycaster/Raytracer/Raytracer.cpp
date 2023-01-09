@@ -82,10 +82,10 @@ int main(int argc, char *argv[])
 	float mouvSpeed = 0.3;
 
 	//Camera variables
-	glm::vec3 pos(22, 0, 12);  //x and y start position
+	glm::vec3 pos(0.5, 0, 0);  //x and y start position
 	glm::quat camRot;
 
-	Camera cam(pos, camRot, 30, windowWidth, windowHeight);
+	Camera cam(pos, camRot, 60, windowWidth, windowHeight);
 
 	SDL_ShowCursor(SDL_DISABLE);////////Options fenêtre SDL
 	//SDL_WM_GrabInput(SDL_GRAB_ON);

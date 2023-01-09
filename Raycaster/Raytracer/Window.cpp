@@ -89,6 +89,6 @@ void Window::setPixelColor(glm::vec2 pos, glm::vec4 color)
 
 void Window::setPixelColor(glm::vec2 pos, Color color)
 {
-	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, 255);
+	SDL_SetRenderDrawColor(renderer, color.arr[0], color.arr[1], color.arr[2], 255);
 	SDL_RenderDrawPoint(renderer, pos[0], pos[1]);
 }
