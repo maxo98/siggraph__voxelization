@@ -32,7 +32,7 @@ public:
 
 	inline void addPointLight(const glm::uvec3& light) { pointLights.push_back(light); }
 	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Color& color, glm::vec3& hitPos,
-		glm::vec3* destination = nullptr, float lvl = 1, MapEntrance* entrance = nullptr);
+		glm::vec3& normal, glm::vec3* destination = nullptr, float lvl = 1, MapEntrance* entrance = nullptr);
 	
 	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket = nullptr);
 

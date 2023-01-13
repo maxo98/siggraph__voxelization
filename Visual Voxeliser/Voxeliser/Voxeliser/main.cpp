@@ -7,8 +7,8 @@
 #include <sstream>
 #include <fstream>
 
-#define TRIANGULATE
-//#define POINT_CLOUD
+//#define TRIANGULATE
+#define POINT_CLOUD
 
 int main(int argc, char** argv) {
     if (argc < 4) {

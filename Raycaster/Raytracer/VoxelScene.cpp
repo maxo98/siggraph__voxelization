@@ -1,4 +1,5 @@
 #include "VoxelScene.h"
+#include <limits>
 
 VoxelScene::VoxelScene()
 {
@@ -7,13 +8,13 @@ VoxelScene::VoxelScene()
 	worldMap.height = MAP_HEIGHT;
 	worldMap.depth = MAP_DEPTH;
 
-	(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->object = new Color(128, 0, 0);
-	(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->contains = OCTREE_CONTENT::FILLED;
+	(worldMap.map + 1 * worldMap.height * worldMap.depth + 1 * worldMap.depth + 3)->object = new Color(128, 0, 0);
+	(worldMap.map + 1 * worldMap.height * worldMap.depth + 1 * worldMap.depth + 3)->contains = OCTREE_CONTENT::FILLED;
 
 	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree = new Octree<Color>[8];
 	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->contains = OCTREE_CONTENT::SPARSE;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0 * 4 + 0 * 2 + 0)->object = new Color(128, 0, 0);
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0 * 4 + 0 * 2 + 0)->contains = OCTREE_CONTENT::FILLED;
+	////((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0 * 4 + 0 * 2 + 0)->object = new Color(128, 0, 0);
+	////((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0 * 4 + 0 * 2 + 0)->contains = OCTREE_CONTENT::FILLED;
 
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->object = new Color(128, 0, 0);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
@@ -65,11 +66,11 @@ VoxelScene::~VoxelScene()
 //which should be fine as long as the voxel map size is not equal to the max value of an unsigned int on any of the axis
 //NOTE2: hitPos needs to be fixed
 bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Color& color, glm::vec3& hitPos, 
-	glm::vec3* destination, float lvl, MapEntrance* entrance)
+	glm::vec3& normal, glm::vec3* destination, float lvl, MapEntrance* entrance)
 {
 	glm::uvec3 mapPos;//Case in which the ray currently is
 	glm::vec3 gridPos;//Worldpos of the voxel, used to know how we have traveled (in euclidean distance)
-	float sqrLvl = lvl * lvl;
+	float sqrLvl = lvl/2 * lvl/2;
 
 	//When entering the grid
 	if (entrance == nullptr)
@@ -87,28 +88,13 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 
 		gridPos = entrance->pos;
 
-		for (uint8_t i = 0; i < 3; ++i)
-		{
-			if (entrance->step[i] == 1)
-			{
-				mapPos[i] = 0;
-				gridPos[i] -= lvl;
-			}
-			else if (entrance->step[i] == -1)
-			{
-				mapPos[i] = 1;
-				gridPos[i] += lvl;
-			}
-		}
-
 		if (intersectPlane(entrance->step, gridPos, pos, rayDir, t) == false)
 		{
-			std::cout << "Error entering octree\n";
+			std::cout << "Error entering octree\n";//We need to handle case in which we start inside the octree
 			return false;
 		}
 		
 		glm::vec3 intersect = rayDir * t + pos - gridPos;//Get intersect pos relative to the octree
-		//std::cout << intersect << std::endl;
 
 		for (uint8_t i = 0; i < 3; ++i)
 		{
@@ -123,10 +109,17 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 					mapPos[i] = 0;
 					gridPos[i] -= lvl;
 				}
+			}else if (entrance->step[i] == 1)
+			{
+				mapPos[i] = 0;
+				gridPos[i] -= lvl;
+			}
+			else if (entrance->step[i] == -1)
+			{
+				mapPos[i] = 1;
+				gridPos[i] += lvl;
 			}
 		}
-
-		//std::cout << mapPos << std::endl;
 	}
 
 	//In which direction we're going for each axis (either +1, or -1)
@@ -192,10 +185,11 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 		{
 			move = false;
 
-			if (destination != nullptr && glm::distance2(gridPos, *destination) <= sqrLvl)
-			{
-				break;
-			}
+			//if (destination != nullptr && glm::distance2(gridPos, *destination) < sqrLvl)
+			//{
+			//	//std::cout << gridPos << " " << destination << std::endl;
+			//	break;
+			//}
 
 			//jump to next map square, OR in x-direction, OR in y-direction
 			if (sideDist.x < sideDist.y)
@@ -233,8 +227,36 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 		}
 		else if(currentTree->contains == OCTREE_CONTENT::FILLED)
 		{
+			//hitPos = gridPos;//tmp
+
 			hit = true;
 			color = *currentTree->object;
+
+			float halfLvl = lvl / 2;
+			float t;
+
+			for (uint8_t i = 0; i < 3; ++i)
+			{
+				if (i != (uint8_t)side)
+				{
+					normal[i] = 0;
+				}
+				else {
+					gridPos[i] -= (halfLvl + std::numeric_limits<float>::epsilon()*2) * step[i];
+					normal[i] = step[i];
+				}
+			}
+
+			if (intersectPlane(normal, gridPos, pos, rayDir, t) == false)
+			{
+				//std::cout << "Error entering octree 2\n" << gridPos << " " << normal << std::endl << pos << rayDir;
+				//return false;
+			}
+
+			
+			hitPos = rayDir * t + pos;//Get intersect pos relative to the octree
+
+			//std::cout << hitPos << std::endl;
 		}
 		else//Sparse octree
 		{
@@ -262,7 +284,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 			map.height = 2;
 			map.width = 2;
 
-			hit = traceRay(map, rayDir, pos, color, hitPos, destination, newLvl, &newEntrance);
+			hit = traceRay(map, rayDir, pos, color, hitPos, normal, destination, newLvl, &newEntrance);
 
 			move = !hit;//if false move like if it was empty
 		}
@@ -280,32 +302,39 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 		float xx = (2 * ((x + 0.5) * camera.wdithStep) - 1) * camera.angle * camera.aspectratio;
 		float yy = (1 - 2 * ((y + 0.5) * camera.heightStep)) * camera.angle;
 
-		glm::vec3 rayDir = camera.camRot * glm::normalize(glm::vec3(xx, yy, 1));
+		glm::vec3 rayDir = glm::normalize(camera.camRot * glm::vec3(xx, yy, 1));
 
 		Color color;
 		glm::vec3 hitPos;
+		glm::vec3 normal;
 
-		if (traceRay(worldMap, rayDir, camera.pos, color, hitPos) == true)
+		if (traceRay(worldMap, rayDir, camera.pos, color, hitPos, normal) == true)
 		{
 			bool hitByLight = false;
 
+			float mDist = -glm::dot(normal, hitPos);
+
 			for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
 			{
-				glm::vec3 filler;
-
-				rayDir = glm::normalize(glm::vec3(pointLights[i] - hitPos));
-
-				//if (traceRay(worldMap, rayDir, hitPos, color, filler, &pointLights[i]) == false)
+				//Check if the on which side of the plane the light is
+				if ((glm::dot(normal, pointLights[i]) + mDist) < 0)
 				{
-					hitByLight = true;
+					glm::vec3 filler, filler2;
+
+					rayDir = glm::normalize(glm::vec3(pointLights[i] - hitPos));
+
+					//std::cout << hitPos << std::endl;
+
+					if (traceRay(worldMap, rayDir, hitPos, color, filler, filler2, &pointLights[i]) == false)
+					{
+						hitByLight = true;
+						buffer[x][y] = color;
+					}
 				}
 			}
 
-			if (hitByLight == true)
+			if (hitByLight == false)
 			{
-				buffer[x][y] = color;
-			}
-			else {
 				buffer[x][y] = Color(0, 0, 0);
 			}
 			
