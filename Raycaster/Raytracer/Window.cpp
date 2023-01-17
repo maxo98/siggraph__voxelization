@@ -78,7 +78,7 @@ void Window::clear() const {
 
 void Window::setPixelColor(glm::vec2 pos, glm::vec3 color)
 {
-	setPixelColor(pos, glm::vec4(color, 255.0));
+	setPixelColor(pos, glm::vec4(color*255.f, 255.0));
 }
 
 void Window::setPixelColor(glm::vec2 pos, glm::vec4 color)

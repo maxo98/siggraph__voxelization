@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
 
 	//Camera variables
 	glm::vec3 pos(0, 0, 0);  //x and y start position
+	float deg = 45;
 	glm::quat camRot;
 
 	Camera cam(pos, camRot, 60, windowWidth, windowHeight);
@@ -64,9 +65,9 @@ int main(int argc, char *argv[])
 
 	scene.addPointLight(glm::uvec3(0, 0, 0));
 
-	std::vector<std::vector<Color>> buffer;
+	std::vector<std::vector<glm::vec3>> buffer;
 
-	buffer.resize(windowWidth, std::vector<Color>(windowHeight, Color(0,0,255)));
+	buffer.resize(windowWidth, std::vector<glm::vec3>(windowHeight, glm::vec3(0,0,1)));
 
 	bool first = true;
 

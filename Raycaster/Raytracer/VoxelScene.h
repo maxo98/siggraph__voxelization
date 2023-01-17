@@ -18,7 +18,7 @@ public:
 	enum class Axis{ X = 0, Y = 1, Z = 2 };
 
 	struct VoxelMap {
-		Octree<Color>* map;
+		Octree<glm::vec3>* map;
 		int width, height, depth;
 	};
 
@@ -30,11 +30,11 @@ public:
 	VoxelScene();
 	~VoxelScene();
 
-	inline void addPointLight(const glm::uvec3& light) { pointLights.push_back(light); }
-	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Color& color, glm::vec3& hitPos,
+	inline void addPointLight(const glm::vec3& light) { pointLights.push_back(light); }
+	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, glm::vec3& color, glm::vec3& hitPos,
 		glm::vec3& normal, glm::vec3* destination = nullptr, float lvl = 1, MapEntrance* entrance = nullptr);
 	
-	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket = nullptr);
+	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, std::atomic<bool>* ticket = nullptr);
 
 private:
 	VoxelMap worldMap;
@@ -42,5 +42,7 @@ private:
 	std::vector<glm::vec3> pointLights;
 	uint8_t levels = 1;
 	//float topLevelSize = 1; Assuming this will always be 1 simplifies things a little
+
+	glm::vec3 lightColor = glm::vec3(1,1,1);
 };
 

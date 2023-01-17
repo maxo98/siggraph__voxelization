@@ -1,36 +1,40 @@
 #include "VoxelScene.h"
 #include <limits>
+#include <algorithm>
 
 VoxelScene::VoxelScene()
 {
-	worldMap.map = new Octree<Color>[MAP_WIDTH * MAP_HEIGHT * MAP_DEPTH];
+	worldMap.map = new Octree<glm::vec3>[MAP_WIDTH * MAP_HEIGHT * MAP_DEPTH];
 	worldMap.width = MAP_WIDTH;
 	worldMap.height = MAP_HEIGHT;
 	worldMap.depth = MAP_DEPTH;
 
-	(worldMap.map + 1 * worldMap.height * worldMap.depth + 1 * worldMap.depth + 3)->object = new Color(128, 0, 0);
-	(worldMap.map + 1 * worldMap.height * worldMap.depth + 1 * worldMap.depth + 3)->contains = OCTREE_CONTENT::FILLED;
+	(worldMap.map + 1 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->object = new glm::vec3(0.5, 0, 0);
+	(worldMap.map + 1 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->contains = OCTREE_CONTENT::FILLED;
 
-	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree = new Octree<Color>[8];
+	(worldMap.map + 0 * worldMap.height * worldMap.depth + 1 * worldMap.depth + 3)->object = new glm::vec3(0, 0.5, 0);
+	(worldMap.map + 0 * worldMap.height * worldMap.depth + 1 * worldMap.depth + 3)->contains = OCTREE_CONTENT::FILLED;
+
+	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree = new Octree<glm::vec3>[8];
 	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->contains = OCTREE_CONTENT::SPARSE;
 	////((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0 * 4 + 0 * 2 + 0)->object = new Color(128, 0, 0);
 	////((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0 * 4 + 0 * 2 + 0)->contains = OCTREE_CONTENT::FILLED;
 
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->object = new Color(128, 0, 0);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->object = new glm::vec3(0.5, 0, 0);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 1)->object = new Color(0, 128, 0);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 1)->object = new glm::vec3(0, 0.5, 0);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 1)->contains = OCTREE_CONTENT::FILLED;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 2)->object = new Color(0, 0, 128);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 2)->object = new glm::vec3(0, 0, 0.5);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 2)->contains = OCTREE_CONTENT::FILLED;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 3)->object = new Color(128, 128, 128);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 3)->object = new glm::vec3(0.5, 0.5, 0.5);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 3)->contains = OCTREE_CONTENT::FILLED;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 4)->object = new Color(128, 128, 0);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 4)->object = new glm::vec3(0.5, 0.5, 0);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 4)->contains = OCTREE_CONTENT::FILLED;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 5)->object = new Color(0, 128, 128);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 5)->object = new glm::vec3(0, 0.5, 0.5);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 5)->contains = OCTREE_CONTENT::FILLED;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 6)->object = new Color(128, 0, 128);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 6)->object = new glm::vec3(0.5, 0, 0.5);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 6)->contains = OCTREE_CONTENT::FILLED;
-	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 7)->object = new Color(255, 255, 255);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 7)->object = new glm::vec3(1, 1, 1);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 7)->contains = OCTREE_CONTENT::FILLED;
 
 
@@ -65,7 +69,7 @@ VoxelScene::~VoxelScene()
 //NOTE: when we get out of the bounds of the map by substracting 1, it will take the maximum value of an unsigned int
 //which should be fine as long as the voxel map size is not equal to the max value of an unsigned int on any of the axis
 //NOTE2: hitPos needs to be fixed
-bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Color& color, glm::vec3& hitPos, 
+bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, glm::vec3& color, glm::vec3& hitPos,
 	glm::vec3& normal, glm::vec3* destination, float lvl, MapEntrance* entrance)
 {
 	glm::uvec3 mapPos;//Case in which the ray currently is
@@ -178,7 +182,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 	bool move = false;//If we passed through a sparse octree without hitting anything 
 	while (hit == false && mapPos.x < map.width && mapPos.x >= 0 && mapPos.y < map.height && mapPos.y >= 0 && mapPos.z < map.depth && mapPos.z >= 0)
 	{
-		Octree<Color>* currentTree = (map.map + mapPos.x * map.height * map.depth + mapPos.y * map.depth + mapPos.z);
+		Octree<glm::vec3>* currentTree = (map.map + mapPos.x * map.height * map.depth + mapPos.y * map.depth + mapPos.z);
 
 		//Check if ray has hit a wall
 		if(currentTree->contains == OCTREE_CONTENT::EMPTY || move == true)//Empty or not hit on sparse octree
@@ -294,7 +298,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 }
 
 
-void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<Color>>& buffer, std::atomic<bool>* ticket)
+void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, std::atomic<bool>* ticket)
 {
 	for (int i = 0; i < workload; i++)
 	{
@@ -304,7 +308,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 
 		glm::vec3 rayDir = glm::normalize(camera.camRot * glm::vec3(xx, yy, 1));
 
-		Color color;
+		glm::vec3 color;
 		glm::vec3 hitPos;
 		glm::vec3 normal;
 
@@ -328,19 +332,39 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 					if (traceRay(worldMap, rayDir, hitPos, color, filler, filler2, &pointLights[i]) == false)
 					{
 						hitByLight = true;
-						buffer[x][y] = color;
+						//buffer[x][y] = color;
+
+						float ambientStrength = 0.5f;
+						glm::vec3 ambient = lightColor * ambientStrength;
+						//std::cout << "ambient : " << ambient << std::endl;
+						// diffuse 
+						normal = -normal;
+						glm::vec3 lightDir = glm::normalize(pointLights[i] - hitPos);
+						float diff = std::max(glm::dot(normal, lightDir), 0.f);
+						glm::vec3 diffuse = lightColor * diff;
+						//std::cout << "diffuse : " << diffuse << std::endl;
+						// specular
+						float specularStrength = 0.5;
+						glm::vec3 viewDir = glm::normalize(camera.pos - hitPos);
+						glm::vec3 reflectDir = reflect(-lightDir, normal);
+						float spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32);
+						glm::vec3 specular = lightColor * specularStrength * spec;
+						//std::cout << "specular : " << specular << std::endl;
+						glm::vec3 result = (ambient + diffuse + specular) * color;
+						//std::cout << "result : " << result << std::endl;
+						buffer[x][y] = result;
 					}
 				}
 			}
 
 			if (hitByLight == false)
 			{
-				buffer[x][y] = Color(0, 0, 0);
+				buffer[x][y] = glm::vec3(0, 0, 0);
 			}
 			
 		}
 		else {
-			buffer[x][y] = Color(0, 0, 0);
+			buffer[x][y] = glm::vec3(0, 0, 0);
 		}
 
 		if (ticket != nullptr)
