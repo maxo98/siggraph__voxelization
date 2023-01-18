@@ -13,5 +13,6 @@ public:
 	glm::quat camRot;
 	glm::vec3 pos;
 	int windowWidth, windowHeight;
-};
 
+	void rotateCamera(int x, int y, float speed);
+};

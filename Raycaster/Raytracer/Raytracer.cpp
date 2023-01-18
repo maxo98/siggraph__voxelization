@@ -13,7 +13,7 @@
 
 #define MULTITHREAD
 
-void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouse) {//Input
+void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
 
 	if (SDL_PollEvent(&event)) {
@@ -22,7 +22,8 @@ void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouse) {//Input
 		
 		if(event.type == SDL_MOUSEMOTION)
 		{
-			_mouse = event.motion.x;
+			_mouseX = event.motion.x;
+			_mouseY = event.motion.y;
 		}
 	}
 }
@@ -44,10 +45,13 @@ int main(int argc, char *argv[])
 	int uniformLocation;
 
 	SDL_Event keyboard;///////////Input variables
-	int lastMouse = 0;
-	int mouse = 0;
+	int lastMouseX = 0;
+	int lastMouseY = 0;
+	int mouseX = 0;
+	int mouseY = 0;
 
-	float mouvSpeed = 0.3;
+	float mouvSpeed = 0.1;
+
 
 	//Camera variables
 	glm::vec3 pos(0, 0, 0);  //x and y start position
@@ -59,6 +63,7 @@ int main(int argc, char *argv[])
 	SDL_ShowCursor(SDL_DISABLE);////////Options fenêtre SDL
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
 	SDL_SetWindowGrab(window.getWindow(), SDL_TRUE);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 
 	VoxelScene scene;
@@ -74,37 +79,38 @@ int main(int argc, char *argv[])
 
 	while (!window.isClosed())///////////////////////////////////////////////////////////////////////////////Main loop
 	{
-		pollEvents(window, keyboard, mouse);///////////////////////Keyboard input
+		pollEvents(window, keyboard, mouseX, mouseY);///////////////////////Keyboard input
 		if(SDLK_b && keyboard.type == SDL_KEYDOWN)
 		{
-			//switch(keyboard.key.keysym.sym)
-			//{
-			//	case SDLK_z:
-
-			//		break;
-			//	case SDLK_q:
-
-			//		break;
-			//	case SDLK_s:
-
-			//		break;
-			//	case SDLK_d:
-
-			//		break;
-			//}
+			switch(keyboard.key.keysym.sym)
+			{
+				case SDLK_z:
+					cam.pos.z += 1;
+					break;
+				case SDLK_q:
+					cam.pos.x -= 1;
+					break;
+				case SDLK_s:
+					cam.pos.z -= 1;
+					break;
+				case SDLK_d:
+					cam.pos.x += 1;
+					break;
+			}
+			std::cout << "position x : " << cam.pos.x << " position z : " << cam.pos.z << std::endl;
 		}
 
 		if(timer + 42 < SDL_GetTicks())////////////////////Display
 		{
 			//window.clear();
 
-			if(lastMouse != mouse)//////Camera rotation
+			if(lastMouseX != mouseX && lastMouseY != mouseY)//////Camera rotation
 			{
-
-
-
-				SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
-				
+				std::cout << "mouse x : " << mouseX << " mouse y : " << mouseY << std::endl;
+				lastMouseX = mouseX;
+				lastMouseY = mouseY;
+				cam.rotateCamera(mouseX, mouseY, mouvSpeed);
+				//SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 			}
 
 			int threads = 1;
