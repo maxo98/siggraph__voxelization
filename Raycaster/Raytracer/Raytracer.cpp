@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 			}
 
 			int threads = 1;
-			unsigned int cpus = std::thread::hardware_concurrency();
+			unsigned int cpus = std::thread::hardware_concurrency() - 1;
 
 			float totalWorkload = windowWidth * windowHeight;
 			float workload = totalWorkload / cpus;
