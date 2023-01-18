@@ -23,7 +23,7 @@ public:
 	};
 
 	struct MapEntrance {
-		glm::ivec3 step;
+		glm::ivec3 normal;
 		glm::vec3 pos;
 	};
 
