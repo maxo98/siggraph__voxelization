@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	VoxelScene scene;
 
-	scene.addPointLight(glm::uvec3(0, 0, 0));
+	scene.addPointLight(glm::uvec3(0, 1, 0));
 
 	std::vector<std::vector<glm::vec3>> buffer;
 
@@ -97,91 +97,96 @@ int main(int argc, char *argv[])
 					cam.pos.x += 1;
 					break;
 			}
-			std::cout << "position x : " << cam.pos.x << " position z : " << cam.pos.z << std::endl;
+			//std::cout << "position x : " << cam.pos.x << " position z : " << cam.pos.z << std::endl;
 		}
 
-		if(timer + 42 < SDL_GetTicks())////////////////////Display
+		if (timer + 42 < SDL_GetTicks())////////////////////Display
 		{
 			//window.clear();
 
-			if(lastMouseX != mouseX && lastMouseY != mouseY)//////Camera rotation
+			if (lastMouseX != mouseX && lastMouseY != mouseY)//////Camera rotation
 			{
-				std::cout << "mouse x : " << mouseX << " mouse y : " << mouseY << std::endl;
+				//std::cout << "mouse x : " << mouseX << " mouse y : " << mouseY << std::endl;
 				lastMouseX = mouseX;
 				lastMouseY = mouseY;
-				cam.rotateCamera(mouseX, mouseY, mouvSpeed);
+				//cam.rotateCamera(mouseX, mouseY, mouvSpeed);
 				//SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 			}
 
-			int threads = 1;
-			unsigned int cpus = std::thread::hardware_concurrency() - 1;
-
-			float totalWorkload = windowWidth * windowHeight;
-			float workload = totalWorkload / cpus;
-			float restWorkload = 0;
-			int currentWorkload = totalWorkload;
-			int startIndex = 0;
-			int count = 0;
-
-			std::deque<std::atomic<bool>> tickets;
-
-			int x = 0, y = 0;
-
-#ifdef MULTITHREAD
-			while (workload < 1)
+			if(first == true)
 			{
-				cpus--;
-				workload = totalWorkload / cpus;
-			}
+				first = false;
 
-			while (cpus > threads)
-			{
-				currentWorkload = floor(workload);
-				float workloadFrac = fmod(workload, 1.0f);
-				restWorkload = workloadFrac;
+				int threads = 1;
+				unsigned int cpus = std::thread::hardware_concurrency() - 1;
 
-				tickets.emplace_back(false);
-				pool->queueJob(&VoxelScene::drawPixels, &scene, currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
-				++threads;
+				float totalWorkload = windowWidth * windowHeight;
+				float workload = totalWorkload / cpus;
+				float restWorkload = 0;
+				int currentWorkload = totalWorkload;
+				int startIndex = 0;
+				int count = 0;
 
-				x += currentWorkload / windowHeight;
-				y += fmod(currentWorkload / float(windowHeight), 1.0f) * windowHeight;
+				std::deque<std::atomic<bool>> tickets;
 
-				if (y >= windowHeight)
+				int x = 0, y = 0;
+
+	#ifdef MULTITHREAD
+				while (workload < 1)
 				{
-					x++;
-					y -= windowHeight;
+					cpus--;
+					workload = totalWorkload / cpus;
 				}
 
-				count += currentWorkload + floor(restWorkload);
-				startIndex += currentWorkload + floor(restWorkload);
+				while (cpus > threads)
+				{
+					currentWorkload = floor(workload);
+					float workloadFrac = fmod(workload, 1.0f);
+					restWorkload = workloadFrac;
 
-				restWorkload -= floor(restWorkload);
-				restWorkload += workloadFrac;
-			}
+					tickets.emplace_back(false);
+					pool->queueJob(&VoxelScene::drawPixels, &scene, currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
+					++threads;
 
-			while (restWorkload > 0)
-			{
-				restWorkload--;
-				currentWorkload++;
-			}
-#endif // MULTITHREAD
+					x += currentWorkload / windowHeight;
+					y += fmod(currentWorkload / float(windowHeight), 1.0f) * windowHeight;
 
-			count += currentWorkload;
+					if (y >= windowHeight)
+					{
+						x++;
+						y -= windowHeight;
+					}
 
-			while (count > totalWorkload)
-			{
-				currentWorkload--;
-				count--;
-			}
+					count += currentWorkload + floor(restWorkload);
+					startIndex += currentWorkload + floor(restWorkload);
 
-			scene.drawPixels(currentWorkload, x, y, window, cam, buffer);
+					restWorkload -= floor(restWorkload);
+					restWorkload += workloadFrac;
+				}
 
-			timer = SDL_GetTicks();
+				while (restWorkload > 0)
+				{
+					restWorkload--;
+					currentWorkload++;
+				}
+	#endif // MULTITHREAD
 
-			for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
-			{
-				itTicket->wait(false);
+				count += currentWorkload;
+
+				while (count > totalWorkload)
+				{
+					currentWorkload--;
+					count--;
+				}
+
+				scene.drawPixels(currentWorkload, x, y, window, cam, buffer);
+
+				timer = SDL_GetTicks();
+
+				for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
+				{
+					itTicket->wait(false);
+				}
 			}
 
 			//Window pixel color

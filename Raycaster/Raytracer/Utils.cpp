@@ -49,11 +49,11 @@ bool intersectPlane(const glm::vec3& normal, const glm::vec3 &posPlane, const gl
 	// assuming vectors are all normalized
 	float denom = glm::dot(normal, rayDir);
 
-	if (denom > 1e-6) 
+	if (denom > 1e-6f) 
 	{
 		glm::vec3 dir = posPlane - posRay;
 		t = glm::dot(dir, normal) / denom;
-		return (t >= 0);
+		return (t >= 0.f);
 	}
 
 	return false;
