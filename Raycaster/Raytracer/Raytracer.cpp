@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 
 	//Camera variables
-	glm::vec3 pos(0, 0, 0);  //x and y start position
+	glm::vec3 pos(1.5, 1.5, 0);  //x and y start position
 	float deg = 45;
 	glm::quat camRot;
 

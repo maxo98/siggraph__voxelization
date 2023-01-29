@@ -9,5 +9,6 @@ std::ostream& operator<<(std::ostream& os, const std::pair<int, int>& dt);
 std::ostream& operator<<(std::ostream& os, const glm::vec3& dt);
 std::ostream& operator<<(std::ostream& os, const glm::uvec3& dt);
 std::ostream& operator<<(std::ostream& os, const glm::ivec3& dt);
+std::ostream& operator<<(std::ostream& os, const glm::dvec3& dt);
 
-bool intersectPlane(const glm::vec3& normal, const glm::vec3& posPlane, const glm::vec3& posRay, const glm::vec3& rayDir, float& t);
+//bool intersectPlane(const glm::vec3& normal, const glm::vec3& posPlane, const glm::vec3& posRay, const glm::vec3& rayDir, float& t);
