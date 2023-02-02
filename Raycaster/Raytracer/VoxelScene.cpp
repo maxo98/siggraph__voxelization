@@ -97,7 +97,7 @@ bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::
 		//pos.x = octPos.x * 2 - pos.x;
 		pos.x = lvl2 - pos.x;
 		rayDir.x = -rayDir.x;
-		a |= 1;
+		a |= 4;
 	}
 
 	if (rayDir.y < 0.0f)
@@ -115,7 +115,7 @@ bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::
 		//pos.z = octPos.z * 2 - pos.z;
 		pos.z = lvl2 - pos.z;
 		rayDir.z = -rayDir.z;
-		a |= 4;
+		a |= 1;
 	}
 
 	glm::dvec3 t0, t1;// IEEE stability fix
@@ -173,8 +173,8 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 
 	//std::cout << t0 << " " << tm << " " << (int)currNode << std::endl;
 
-	glm::vec3 tmp1;
-	glm::vec3 tmp2;
+	glm::dvec3 tmp1;
+	glm::dvec3 tmp2;
 
 	uint8_t oldNode;
 
@@ -192,8 +192,8 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 		case 1:
 			tmp1 = t0;
 			tmp2 = tm;
-			tmp1[2] = tm[2];
-			tmp2[2] = t1[2];
+			tmp1.z = tm.z;
+			tmp2.z = t1.z;
 
 			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
 
@@ -203,8 +203,8 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 		case 2:
 			tmp1 = t0;
 			tmp2 = tm;
-			tmp1[1] = tm[1];
-			tmp2[1] = t1[1];
+			tmp1.y = tm.y;
+			tmp2.y = t1.y;
 
 			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
 
@@ -214,10 +214,10 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 		case 3:
 			tmp1 = t0;
 			tmp2 = tm;
-			tmp1[1] = tm[1];
-			tmp2[1] = t1[1];
-			tmp1[2] = tm[2];
-			tmp2[2] = t1[2];
+			tmp1.y = tm.y;
+			tmp2.y = t1.y;
+			tmp1.z = tm.z;
+			tmp2.z = t1.z;
 
 			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
 
@@ -227,8 +227,8 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 		case 4:
 			tmp1 = t0;
 			tmp2 = tm;
-			tmp1[0] = tm[0];
-			tmp2[0] = t1[0];
+			tmp1.x = tm.x;
+			tmp2.x = t1.x;
 
 			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
 
@@ -238,11 +238,11 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 		case 5:
 			tmp1 = t0;
 			tmp2 = tm;
-			tmp1[0] = tm[0];
-			tmp2[0] = t1[0];
+			tmp1.x = tm.x;
+			tmp2.x = t1.x;
 
-			tmp1[2] = tm[2];
-			tmp2[2] = t1[2];
+			tmp1.z = tm.z;
+			tmp2.z = t1.z;
 
 			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
 
@@ -252,10 +252,10 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 		case 6:
 			tmp1 = t0;
 			tmp2 = tm;
-			tmp1[0] = tm[0];
-			tmp2[0] = t1[0];
-			tmp1[1] = tm[1];
-			tmp2[1] = t1[1];
+			tmp1.x = tm.x;
+			tmp2.x = t1.x;
+			tmp1.y = tm.y;
+			tmp2.y = t1.y;
 
 			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
 
@@ -268,7 +268,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			break;
 		}
 
-		//std::cout << (int)oldNode << " " << (int)currNode << std::endl;
+		//std::cout << (int)oldNode << " " << (int)currNode << " " << t1 << " " << tm << std::endl;
 
 		//newNormal(oldNode, currNode, normal);
 
@@ -290,28 +290,31 @@ uint8_t VoxelScene::firstNode(glm::dvec3 t0, glm::dvec3 tm)
 	uint8_t answer = 0;   // initialize to 00000000
 	// select the entry plane and set bits
 	if (t0.x > t0.y) {
-		if (t0.x > t0.z) { // PLANE YZ
-			if (tm.z < t0.x) answer |= 4;
+		if (t0.x > t0.z) // PLANE YZ
+		{ 
 			if (tm.y < t0.x) answer |= 2;
+			if (tm.z < t0.x) answer |= 1;
 			return answer;
 		}
 	}
 	else {
-		if (t0.y > t0.z) { // PLANE XZ
-			if (tm.z < t0.y) answer |= 4;    // set bit at position 2
-			if (tm.x < t0.y) answer |= 1;    // set bit at position 0
+		if (t0.y > t0.z) // PLANE XZ
+		{ 
+			if (tm.x < t0.y) answer |= 4;
+			if (tm.z < t0.y) answer |= 1;
 			return answer;
 		}
 	}
 	// PLANE XY
+	if (tm.x < t0.z) answer |= 4;
 	if (tm.y < t0.z) answer |= 2;
-	if (tm.x < t0.z) answer |= 1;
 	return answer;
 }
 
 uint8_t VoxelScene::newNode(float txm, uint8_t x, float tym, uint8_t y, float tzm, uint8_t z)
 {
-	if (txm < tym) {
+	if (txm < tym) 
+	{
 		if (txm < tzm) { return x; }  // YZ plane
 	}
 	else {
