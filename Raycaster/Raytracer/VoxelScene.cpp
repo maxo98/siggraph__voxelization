@@ -22,8 +22,8 @@ VoxelScene::VoxelScene()
 
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0 * 2 * 2 + 0 * 2 + 0)->object = new glm::vec3(0.5, 0, 0);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0 * 2 * 2 + 0 * 2 + 0)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->object = new glm::vec3(0, 0.5, 0);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->object = new glm::vec3(0, 0.5, 0);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
 	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 1)->object = new glm::vec3(0.5, 0, 0);
 	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 1)->contains = OCTREE_CONTENT::FILLED;
 	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 2)->object = new glm::vec3(0, 0, 0.5);
@@ -39,10 +39,14 @@ VoxelScene::VoxelScene()
 	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 7)->object = new glm::vec3(1, 1, 1);
 	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 7)->contains = OCTREE_CONTENT::FILLED;
 
-	//((worldMap.map + 1 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->tree = new Octree<glm::vec3>[8];
-	//((worldMap.map + 1 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->contains = OCTREE_CONTENT::SPARSE;
-	//(((worldMap.map + 1 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->tree + 0)->object = new glm::vec3(0.3, 0.3, 0.3);
-	//(((worldMap.map + 1 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
+	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree = new Octree<glm::vec3>[8];
+	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->contains = OCTREE_CONTENT::SPARSE;
+	//(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->object = new glm::vec3(0.3, 0.3, 0.3);
+	//(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
+	(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree = new Octree<glm::vec3>[8];
+	(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::SPARSE;
+	((((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree + 0)->object = new glm::vec3(0.3, 0.3, 0.3);
+	((((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
 
 
 
@@ -74,68 +78,55 @@ VoxelScene::~VoxelScene()
 	delete[] worldMap.map;
 }
 
-bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::vec3 rayDir, glm::vec3 pos, double lvl, glm::vec3* color, glm::vec3& normal)
+bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::vec3 rayDir, glm::vec3 pos, float lvl, glm::vec3* color, glm::vec3& normal, float& t, bool& hitOnEnter)
 {
-	//std::cout << octPos << std::endl;
-
 	uint8_t a = 0;
 
-	float lvl2 = lvl * 2;
-	glm::vec3 min, max;
+	double lvl2 = lvl * 2.0;
+	glm::vec3 modifiedRay = rayDir;
+	glm::vec3 modifiedPos = pos;
 
-	for (uint8_t i = 0; i < 3; ++i)
+	if (modifiedRay.x < 0.0f)
 	{
-		//min[i] = -lvl;
-		//max[i] = lvl;
-		min[i] = octPos[i] - lvl;
-		max[i] = octPos[i] + lvl2;
-	}
-
-	if (rayDir.x < 0.0f)
-	{
-		//pos.x = (octPos.x + lvl) * 2 - pos.x;
-		//pos.x = octPos.x * 2 - pos.x;
-		pos.x = lvl2 - pos.x;
-		rayDir.x = -rayDir.x;
+		modifiedPos.x = lvl2 - modifiedPos.x;
+		modifiedRay.x = -modifiedRay.x;
 		a |= 4;
 	}
 
-	if (rayDir.y < 0.0f)
+	if (modifiedRay.y < 0.0f)
 	{
-		//pos.y = (octPos.y + lvl) * 2 - pos.y;
-		//pos.y = octPos.y * 2 - pos.y;
-		pos.y = lvl2 - pos.y;
-		rayDir.y = -rayDir.y;
+		modifiedPos.y = lvl2 - modifiedPos.y;
+		modifiedRay.y = -modifiedRay.y;
 		a |= 2;
 	}
 
-	if (rayDir.z < 0.0f)
+	if (modifiedRay.z < 0.0f)
 	{
-		//pos.z = (octPos.z + lvl) * 2 - pos.z;
-		//pos.z = octPos.z * 2 - pos.z;
-		pos.z = lvl2 - pos.z;
-		rayDir.z = -rayDir.z;
+		modifiedPos.z = lvl2 - modifiedPos.z;
+		modifiedRay.z = -modifiedRay.z;
 		a |= 1;
 	}
 
 	glm::dvec3 t0, t1;// IEEE stability fix
 
+	//To avoid division by 0.
 	for (uint8_t i = 0; i < 3; ++i)
 	{
-		t0[i] = ((double)octPos[i] - pos[i]) / (double)rayDir[i];
-		t1[i] = ((double)octPos[i] + lvl*2.0 - pos[i]) / (double)rayDir[i];
-
-		//if (i == 2)
+		if (modifiedRay[i] == 0.f)
 		{
-			//std::cout << min[i] << " " << max[i] << " " << pos[i] << " " << rayDir[i] << std::endl;
-
+			modifiedRay[i] = std::numeric_limits<float>::epsilon();
 		}
-		//
+	}
+
+	for (uint8_t i = 0; i < 3; ++i)
+	{
+		t0[i] = ((double)octPos[i] - modifiedPos[i]) / (double)modifiedRay[i];
+		t1[i] = ((double)octPos[i] + lvl2 - modifiedPos[i]) / (double)modifiedRay[i];
 	}
 
 	if (std::max(std::max(t0[0], t0[1]), t0[2]) < std::min(std::min(t1[0], t1[1]), t1[2]))
 	{
-		return procSubtree(t0, t1, oct, a, color, normal);
+		return procSubtree(t0, t1, oct, octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter);
 	}
 	else {
 		std::cout << "error\n";
@@ -144,7 +135,8 @@ bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::
 	return false;
 }
 
-bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* octree, uint8_t a, glm::vec3* color, glm::vec3& normal)
+bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* octree, const glm::vec3& octPos, 
+	glm::vec3 rayDir, glm::vec3 pos, float lvl, uint8_t a, glm::vec3* color, glm::vec3& normal, float& t, bool& hitOnEnter)
 {
 	uint8_t currNode;
 
@@ -153,8 +145,8 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 
 	if (octree->contains == OCTREE_CONTENT::FILLED)
 	{
-		//proc_terminal(n);
 		*color = *octree->object;
+		hitOnEnter = true;
 		return true;
 	}
 	else if (octree->contains == OCTREE_CONTENT::EMPTY) 
@@ -171,22 +163,27 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 
 	currNode = firstNode(t0, tm);
 
-	//std::cout << t0 << " " << tm << " " << (int)currNode << std::endl;
-
 	glm::dvec3 tmp1;
 	glm::dvec3 tmp2;
 
-	uint8_t oldNode;
+	uint8_t oldNode1 = currNode;
+	uint8_t oldNode2 = currNode;
+	bool hit = false;
 
 	do {
-		oldNode = currNode;
-		
+		oldNode2 = oldNode1;
+		oldNode1 = currNode;
+
 		switch (currNode)
 		{
 		case 0:
-			if(procSubtree(t0, tm, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-
-			currNode = newNode(tm.x, 4, tm.y, 2, tm.z, 1);
+			if (procSubtree(t0, tm, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = newNode(tm.x, 4, tm.y, 2, tm.z, 1);
+			}
 			break;
 
 		case 1:
@@ -195,9 +192,13 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.z = tm.z;
 			tmp2.z = t1.z;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-
-			currNode = newNode(tm.x, 5, tm.y, 3, t1.z, 8);
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = newNode(tm.x, 5, tm.y, 3, t1.z, 8);
+			}
 			break;
 
 		case 2:
@@ -206,9 +207,13 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.y = tm.y;
 			tmp2.y = t1.y;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-
-			currNode = newNode(tm.x, 6, t1.y, 8, tm.z, 3);
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = newNode(tm.x, 6, t1.y, 8, tm.z, 3);
+			}
 			break;
 
 		case 3:
@@ -219,9 +224,13 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.z = tm.z;
 			tmp2.z = t1.z;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-
-			currNode = newNode(tm.x, 7, t1.y, 8, t1.z, 8);
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = newNode(tm.x, 7, t1.y, 8, t1.z, 8);
+			}
 			break;
 
 		case 4:
@@ -230,9 +239,13 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.x = tm.x;
 			tmp2.x = t1.x;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-
-			currNode = newNode(t1.x, 8, tm.y, 6, tm.z, 5);
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = newNode(t1.x, 8, tm.y, 6, tm.z, 5);
+			}
 			break;
 
 		case 5:
@@ -244,9 +257,13 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.z = tm.z;
 			tmp2.z = t1.z;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-
-			currNode = newNode(t1.x, 8, tm.y, 7, t1.z, 8);
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = newNode(t1.x, 8, tm.y, 7, t1.z, 8);
+			}
 			break;
 
 		case 6:
@@ -257,36 +274,42 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.y = tm.y;
 			tmp2.y = t1.y;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-
-			currNode = newNode(t1.x, 8, t1.y, 8, tm.z, 7);
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = newNode(t1.x, 8, t1.y, 8, tm.z, 7);
+			}
 			break;
 
 		case 7:
-			if (procSubtree(tm, t1, octree->tree + (int)(currNode ^ a), a, color, normal) == true) return true;
-			currNode = 8;
+			if (procSubtree(tm, t1, octree->tree + (int)(currNode ^ a), octPos, rayDir, pos, lvl, a, color, normal, t, hitOnEnter) == true)
+			{
+				hit = true;
+			}
+			else {
+				currNode = 8;
+			}
+			
 			break;
 		}
 
-		//std::cout << (int)oldNode << " " << (int)currNode << " " << t1 << " " << tm << std::endl;
+		if (hitOnEnter == true && oldNode2 != currNode)
+		{
+			newNormal(oldNode2, currNode, normal);
+			hitOnEnter = false;
+		}
 
-		//newNormal(oldNode, currNode, normal);
+	} while (currNode < 8 && hit == false);
 
-	} while (currNode < 8);
 
-	return false;
+
+	return hit;
 }
 
 uint8_t VoxelScene::firstNode(glm::dvec3 t0, glm::dvec3 tm)
 {
-	//std::cout << t0 << " " << tm << " " << (int)((tm[0] < t0[2] ? 1 : 0) | (tm[1] < t0[2] ? 2 : 0)
-	//	| (tm[0] < t0[1] ? 1 : 0) | (tm[2] < t0[1] ? 4 : 0)
-	//	| (tm[1] < t0[0] ? 2 : 0) | (tm[2] < t0[0] ? 4 : 0)) << std::endl;
-
-	//return ((tm[0] < t0[2] ? 1 : 0) | (tm[1] < t0[2] ? 2 : 0) 
-	//	| (tm[0] < t0[1] ? 1 : 0) | (tm[2] < t0[1] ? 4 : 0) 
-	//	| (tm[1] < t0[0] ? 2 : 0) | (tm[2] < t0[0] ? 4 : 0));
-
 	uint8_t answer = 0;   // initialize to 00000000
 	// select the entry plane and set bits
 	if (t0.x > t0.y) {
@@ -361,11 +384,11 @@ void VoxelScene::newNormal(uint8_t oldNode, uint8_t newNode, glm::vec3& normal)
 //which should be fine as long as the voxel map size is not equal to the max value of an unsigned int on any of the axis
 //NOTE2: hitPos needs to be fixed
 bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, glm::vec3& color, glm::vec3& hitPos,
-	glm::vec3& normal, glm::vec3* destination, double lvl, MapEntrance* entrance)
+	glm::vec3& normal, glm::vec3* destination, float lvl, MapEntrance* entrance)
 {
 	glm::uvec3 mapPos;//Case in which the ray currently is
 	glm::vec3 gridPos;//Worldpos of the voxel, used to know how we have traveled (in euclidean distance)
-	double sqrLvl = lvl/2 * lvl/2;
+	float sqrLvl = lvl/2 * lvl/2;
 
 	glm::uvec3 test;
 
@@ -393,8 +416,6 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 	deltaDist.x = fabs(1 / rayDir.x);
 	deltaDist.y = fabs(1 / rayDir.y);
 	deltaDist.z = fabs(1 / rayDir.z);
-
-	//deltaDist /= lvl;
 
 	//to compress in a loop
 	//calculate step and initial sideDist
@@ -445,12 +466,6 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 		if(currentTree->contains == OCTREE_CONTENT::EMPTY || move == true)//Empty or not hit on sparse octree
 		{
 			move = false;
-
-			//if (destination != nullptr && glm::distance2(gridPos, *destination) < sqrLvl)
-			//{
-			//	//std::cout << gridPos << " " << destination << std::endl;
-			//	break;
-			//}
 
 			prevPos = gridPos;
 
@@ -511,67 +526,35 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 
 			intersectPlane(normal, gridPos, pos, rayDir, t);
 			
-			//std::cout << mapPos << std::endl;
-
-			//std::cout << lvl << std::endl;
-			
 			hitPos = rayDir * (t - std::numeric_limits<float>::epsilon()*100) + pos;//Get intersect pos relative to the octree
 		}
 		else//Sparse octree
 		{
-			//float newLvl = lvl / 2;
-			//MapEntrance newEntrance;
 
-			//newEntrance.pos = gridPos;
+			float t;
+			bool hitOnEnter = false;
 
-			//for (uint8_t i = 0; i < 3; ++i)
-			//{
-			//	if (i != (uint8_t)side)
-			//	{
-			//		newEntrance.normal[i] = 0;
-			//	}
-			//	else {
-			//		newEntrance.normal[i] = -step[i];
-			//		//newEntrance.pos[i] -= newLvl * step[i];
-			//		//float tmp = newEntrance.pos[i] - newEntrance.pos[i] / lvl;
-			//		//newEntrance.pos[i] = newEntrance.pos[i] - tmp;
-			//		//newEntrance.pos[i] += tmp < newLvl ? newLvl : -newLvl;
-			//	}
-			//}
+			hit = rayParam(currentTree, gridPos, rayDir, pos, lvl / 2.0, &color, normal, t, hitOnEnter);
 
-			//VoxelMap map;
-
-			//map.map = currentTree->tree;
-			//map.depth = 2;
-			//map.height = 2;
-			//map.width = 2;
-
-			//hit = traceRay(map, rayDir, pos, color, hitPos, normal, destination, newLvl, &newEntrance);
-
-			for (uint8_t i = 0; i < 3; ++i)
+			if (hitOnEnter == true)
 			{
-				if (i != (uint8_t)side)
+				for (uint8_t i = 0; i < 3; ++i)
 				{
-					normal[i] = 0;
-				}
-				else {
-					normal[i] = -step[i];
-					//newEntrance.pos[i] -= newLvl * step[i];
-					//float tmp = newEntrance.pos[i] - newEntrance.pos[i] / lvl;
-					//newEntrance.pos[i] = newEntrance.pos[i] - tmp;
-					//newEntrance.pos[i] += tmp < newLvl ? newLvl : -newLvl;
+					if (i != (uint8_t)side)
+					{
+						normal[i] = 0;
+					}
+					else {
+						normal[i] = -step[i];
+					}
 				}
 			}
-
-			//std::cout << normal << std::endl;
-
-			hit = rayParam(currentTree, gridPos, rayDir, pos, lvl / 2.0, &color, normal);
-
-			//std::cout << normal << std::endl;
 
 			move = !hit;//if false move like if it was empty
 		}
 	}
+
+
 
 	return hit;
 }
@@ -616,7 +599,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 						float ambientStrength = 0.1f;
 						glm::vec3 ambient = lightColor * ambientStrength;
 						// diffuse 
-						//normal = -normal;
+						normal = -normal;
 						glm::vec3 lightDir = glm::normalize(pointLights[i] - hitPos);
 						float diff = std::max(glm::dot(normal, lightDir), 0.f);
 						glm::vec3 diffuse = lightColor * diff;
@@ -626,10 +609,11 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 						glm::vec3 reflectDir = reflect(-lightDir, normal);
 						float spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
 						glm::vec3 specular = lightColor * specularStrength * spec;
-						glm::vec3 result = (ambient + diffuse + specular) * color;
+						glm::vec3 result = (ambient + diffuse) * color; // + specular
+						//std::cout << lightDir << std::endl;
 						//buffer[x][y] = glm::min(result, glm::vec3(1.f));
-						//buffer[x][y] = abs(normal);
-						buffer[x][y] = color;
+						buffer[x][y] = abs(normal);
+						//buffer[x][y] = color;
 					}
 				}
 			}
@@ -644,12 +628,6 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 			buffer[x][y] = glm::vec3(0, 0, 0);
 		}
 
-		if (ticket != nullptr)
-		{
-			(*ticket) = true;
-			ticket->notify_one();
-		}
-
 		y++;
 
 		if (y >= camera.windowHeight)
@@ -657,6 +635,12 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 			x++;
 			y -= camera.windowHeight;
 		}
+	}
+
+	if (ticket != nullptr)
+	{
+		(*ticket) = true;
+		ticket->notify_one();
 	}
 }
 
