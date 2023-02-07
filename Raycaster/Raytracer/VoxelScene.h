@@ -31,21 +31,18 @@ public:
 	~VoxelScene();
 
 	inline void addPointLight(const glm::vec3& light) { pointLights.push_back(light); }
-	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, glm::vec3& color, glm::vec3& hitPos,
-		glm::vec3& normal, glm::vec3* destination = nullptr, float lvl = 1, MapEntrance* entrance = nullptr);
+	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Octree<glm::vec3>** octreeHit, glm::vec3& hitPos,
+		glm::vec3& normal, float lvl = 1, MapEntrance* entrance = nullptr);
 	
 	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, std::atomic<bool>* ticket = nullptr);
 
-	void intersectPlane(const glm::vec3& normal, const glm::vec3& posPlane, const glm::vec3& posRay, const glm::vec3& rayDir, float& t);
-
-
 	//Octree traveral
-	uint8_t firstNode(glm::dvec3 t0, glm::dvec3 tm);
-	uint8_t newNode(float txm, uint8_t x, float tym, uint8_t y, float tzm, uint8_t z);
+	uint8_t firstNode(glm::dvec3 t0, glm::dvec3 tm, float& t);
+	uint8_t newNode(float txm, uint8_t x, float tym, uint8_t y, float tzm, uint8_t z, float& t);
 	void newNormal(uint8_t oldNode, uint8_t newNode, glm::vec3& normal);
-	bool rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::vec3 rayDir, glm::vec3 pos, float lvl, glm::vec3* color, glm::vec3& normal, float& t, bool& hitOnEnter);
+	bool rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::vec3 rayDir, glm::vec3 pos, float lvl, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
 	bool procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* octree, const glm::vec3& octPos,
-		glm::vec3 rayDir, glm::vec3 pos, float lvl, uint8_t a, glm::vec3* color, glm::vec3& normal, float& t, bool& hitOnEnter);
+		glm::vec3 rayDir, glm::vec3 pos, float lvl, uint8_t a, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
 
 private:
 	VoxelMap worldMap;

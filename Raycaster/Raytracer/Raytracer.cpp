@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 
 	//Camera variables
-	glm::vec3 pos(1.5, 0, 0);  //x and y start position
+	glm::vec3 pos(1.5, 1.5, 0);  //x and y start position
 	float deg = 45;
 	glm::quat camRot;
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	VoxelScene scene;
 
-	scene.addPointLight(glm::uvec3(0, 1, 0));
+	scene.addPointLight(glm::uvec3(3, 0, 0));
 
 	std::vector<std::vector<glm::vec3>> buffer;
 
