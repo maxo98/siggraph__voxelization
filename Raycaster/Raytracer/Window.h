@@ -8,7 +8,6 @@
 //#include <SDL_mixer.h>
 #include <vector>
 #include <glm.hpp>
-#include "Color.h"
 
 class Window {
 public:
@@ -23,7 +22,6 @@ public:
 
 	void setPixelColor(glm::vec2 pos, glm::vec3 color);
 	void setPixelColor(glm::vec2 pos, glm::vec4 color);
-	void setPixelColor(glm::vec2 pos, Color color);
 
 	inline SDL_Window* getWindow() { return _window; };
 

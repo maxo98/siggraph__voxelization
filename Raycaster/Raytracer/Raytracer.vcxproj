@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Color.cpp" />
     <ClCompile Include="Raytracer.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="Utils.cpp" />
@@ -29,7 +28,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="Color.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Utils.h" />

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Color.h"
 #include <array>
 
 enum class OCTREE_CONTENT { EMPTY, FILLED, SPARSE };
