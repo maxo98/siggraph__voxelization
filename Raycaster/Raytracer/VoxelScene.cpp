@@ -15,8 +15,24 @@ VoxelScene::VoxelScene()
 	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->object = new glm::vec3(0.5, 0, 0);
 	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 3)->contains = OCTREE_CONTENT::FILLED;
 
-	(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree = new Octree<glm::vec3>[8];
-	(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->contains = OCTREE_CONTENT::SPARSE;
+
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			for (int h = 0; h < 2; h++)
+			{
+				addPoint(glm::vec3(0 + 0.5 * i, 0 + 0.5 * j, 3 + 0.5 * h), glm::vec3(0, 0, 1.0));
+			}
+		}
+	}
+
+	simplify();
+
+	//addPoint(glm::vec3(0 + 1 / 3 * 0, 0 + 1 / 3 * 0, 3 + 1 / 3 * 0), glm::vec3(0, 0, 1.0));
+
+	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree = new Octree<glm::vec3>[8];
+	//(worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->contains = OCTREE_CONTENT::SPARSE;
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0 * 4 + 0 * 2 + 0)->object = new glm::vec3(0.5, 0, 0);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0 * 4 + 0 * 2 + 0)->contains = OCTREE_CONTENT::FILLED;
 
@@ -24,29 +40,29 @@ VoxelScene::VoxelScene()
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0 * 2 * 2 + 0 * 2 + 0)->contains = OCTREE_CONTENT::FILLED;
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->object = new glm::vec3(0, 0.5, 0);
 	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 1)->object = new glm::vec3(0.5, 0, 0);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 1)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 2)->object = new glm::vec3(0, 0, 0.5);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 2)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 3)->object = new glm::vec3(0.5, 0.5, 0.5);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 3)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 4)->object = new glm::vec3(0.5, 0.5, 0);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 4)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 5)->object = new glm::vec3(0, 0.5, 0.5);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 5)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 6)->object = new glm::vec3(0.5, 0, 0.5);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 6)->contains = OCTREE_CONTENT::FILLED;
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 7)->object = new glm::vec3(1, 1, 1);
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 7)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 1)->object = new glm::vec3(0.5, 0, 0);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 1)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 2)->object = new glm::vec3(0, 0, 0.5);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 2)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 3)->object = new glm::vec3(0.5, 0.5, 0.5);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 3)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 4)->object = new glm::vec3(0.5, 0.5, 0);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 4)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 5)->object = new glm::vec3(0, 0.5, 0.5);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 5)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 6)->object = new glm::vec3(0.5, 0, 0.5);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 6)->contains = OCTREE_CONTENT::FILLED;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 7)->object = new glm::vec3(1, 1, 1);
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 7)->contains = OCTREE_CONTENT::FILLED;
 
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree = new Octree<glm::vec3>[8];
-	((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->contains = OCTREE_CONTENT::SPARSE;
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree = new Octree<glm::vec3>[8];
+	//((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->contains = OCTREE_CONTENT::SPARSE;
 	//(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->object = new glm::vec3(0.3, 0.3, 0.3);
 	//(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
-	(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree = new Octree<glm::vec3>[8];
-	(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::SPARSE;
-	((((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree + 0)->object = new glm::vec3(0.3, 0.3, 0.3);
-	((((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
+	//(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree = new Octree<glm::vec3>[8];
+	//(((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::SPARSE;
+	//((((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree + 0)->object = new glm::vec3(0.3, 0.3, 0.3);
+	//((((worldMap.map + 0 * worldMap.height * worldMap.depth + 0 * worldMap.depth + 2)->tree + 0)->tree + 0)->tree + 0)->contains = OCTREE_CONTENT::FILLED;
 
 
 
@@ -129,7 +145,7 @@ bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::
 		return procSubtree(t0, t1, oct, octPos, rayDir, pos, lvl, a, octreeHit, normal, t, hitOnEnter);
 	}
 	else {
-		std::cout << "error\n";
+		std::cout << "error floating point precision\n";
 	}
 
 	return false;
@@ -645,7 +661,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 						glm::vec3 reflectDir = reflect(-lightDir, normal);
 						float spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
 						glm::vec3 specular = lightColor * specularStrength * spec;
-						glm::vec3 result = (ambient + diffuse) * color; // + specular
+						glm::vec3 result = (ambient + diffuse) * color + specular;
 						//std::cout << lightDir << std::endl;
 						buffer[x][y] = glm::min(result, glm::vec3(1.f));
 						//buffer[x][y] = abs(normal);
@@ -679,4 +695,125 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 		(*ticket) = true;
 		ticket->notify_one();
 	}
+}
+
+void VoxelScene::addPoint(glm::vec3 pos, glm::vec3 color)
+{
+	uint8_t level = 1;
+	float divLevel = 0.5f;
+
+	if (pos.x < 0 || pos.x >= worldMap.width || pos.y < 0 || pos.y >= worldMap.height || pos.z < 0 || pos.z >= worldMap.depth) return;
+
+	Octree<glm::vec3> *currentTree = (worldMap.map + int(pos.x) * worldMap.height * worldMap.depth + int(pos.y) * worldMap.depth + int(pos.z));
+
+	//Check that we are within bounds
+
+	for (uint8_t i = 0; i < 3; i++)
+	{
+		pos[i] -= int(pos[i]);
+	}
+
+	while (level < levels && currentTree->contains != OCTREE_CONTENT::FILLED)
+	{
+		//If empty create tree
+		if (currentTree->contains == OCTREE_CONTENT::EMPTY)
+		{
+			currentTree->tree = new Octree<glm::vec3>[8];
+			currentTree->contains = OCTREE_CONTENT::SPARSE;
+		}
+
+		level++;
+
+		uint8_t index = 0;
+		
+		for (uint8_t i = 0; i < 3; i++)
+		{
+			if (pos[i] > divLevel)
+			{
+				pos[i] -= divLevel;
+
+				index |= 1 << (2 - i);
+			}
+		}
+
+		currentTree = currentTree->tree + index;
+		divLevel *= 0.5f;
+	}
+
+	//If empty create tree
+	if (currentTree->contains == OCTREE_CONTENT::EMPTY)
+	{
+		currentTree->tree = new Octree<glm::vec3>[8];
+		currentTree->contains = OCTREE_CONTENT::SPARSE;
+	}
+
+	if (currentTree->contains != OCTREE_CONTENT::FILLED)//Should be empty or filled if we are at max level 
+	{
+		currentTree->contains = OCTREE_CONTENT::FILLED;
+		*currentTree->object = color;
+	}
+	else {
+		std::cout << "already filled\n";
+	}
+}
+
+void VoxelScene::simplify()
+{
+	for (int x = 0; x < worldMap.width; x++)
+	{
+		for (int y = 0; y < worldMap.height; y++)
+		{
+			for (int z = 0; z < worldMap.depth; z++)
+			{
+				Octree<glm::vec3>* currentTree = (worldMap.map + x * worldMap.height * worldMap.depth + y * worldMap.depth + z);
+
+				if (currentTree->contains == OCTREE_CONTENT::SPARSE)
+				{
+					simplifyOctree(currentTree);
+				}
+			}
+		}
+	}
+}
+
+void VoxelScene::simplifyOctree(Octree<glm::vec3>* tree)
+{
+	glm::vec3 *color = nullptr;
+
+	//Check if leaves are similar
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		if (tree->contains == OCTREE_CONTENT::SPARSE)
+		{
+			simplifyOctree(tree->tree);
+
+			if (tree->contains == OCTREE_CONTENT::SPARSE)
+			{
+				return;
+			}
+		}
+
+		if (tree->contains == OCTREE_CONTENT::EMPTY)
+		{
+			return;
+		}
+		else {
+			if (i == 0)
+			{
+				color = tree->object;
+			}
+			else if (*color != *tree->object)
+			{
+				return;
+			}
+		}
+	}
+
+	//Delete tree
+	delete[] tree->tree;
+
+	tree->contains = OCTREE_CONTENT::FILLED;
+	tree->object = new glm::vec3(*color);
+
+	//std::cout << "merged\n";
 }
