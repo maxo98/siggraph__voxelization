@@ -8,8 +8,8 @@
 
 #define PROGRAM_NAME "Raycaster V1.0"
 
-#define windowWidth 600
-#define windowHeight 400
+#define windowWidth 1920
+#define windowHeight 1080
 
 #define MULTITHREAD
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 
 	//Camera variables
-	glm::vec3 pos(1.5, 1.5, 0);  //x and y start position
+	glm::vec3 pos(3, 3.5, 0);  //x and y start position
 	float deg = 45;
 	glm::quat camRot;
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	VoxelScene scene;
 
-	scene.addPointLight(glm::uvec3(3, 0, 0));
+	scene.addPointLight(glm::uvec3(3.2, 3.2, 0));
 
 	std::vector<std::vector<glm::vec3>> buffer;
 
