@@ -664,7 +664,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 			for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
 			{
 				//Check if the on which side of the plane the light is
-				//if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
+				if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
 				{
 					glm::vec3 filler, filler2;
 					Octree<glm::vec3>* oHitLight = nullptr;
@@ -675,7 +675,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 
 					traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
 
-					//if (octreeHit == oHitLight)
+					if (octreeHit == oHitLight)
 					{
 						hitByLight = true;
 

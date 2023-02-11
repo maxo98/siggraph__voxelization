@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	VoxelScene scene;
 
-	scene.addPointLight(glm::uvec3(3.2, 3.2, 0));
+	scene.addPointLight(glm::uvec3(2, 4, 1));
 
 	std::vector<std::vector<glm::vec3>> buffer;
 
