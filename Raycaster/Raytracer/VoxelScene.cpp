@@ -28,33 +28,8 @@ VoxelScene::VoxelScene()
 		}
 	}*/
 
-	std::fstream fs("Teapot2.txt", std::fstream::in);
-
-	if (fs.is_open() == true)
-	{
-		std::cout << "Loading model\n";
-
-		char buff[256];
-		std::string str = "";
-		char tmp;
-
-		std::string s1, s2, s3;
-
-		while (fs.eof() == false)
-		{
-			fs >> s1 >> s2 >> s3;
-
-			//I think there's a small bug with the loading of the model, probably due to floating point imprecision
-			//Adding a very small offset makes it disappear
-			addPoint(glm::vec3(stof(s1) + 3.001, stof(s2) + 3, stof(s3) + 3), glm::vec3(0, 0, 1.0));
-
-			//fs.seekg((int)fs.tellg() + 1);
-
-			//fs.getline(buff, 256);
-		}
-
-		fs.close();
-	}
+	loadModel(glm::dvec3(3, 3, 3), "Scene.txt");
+	//loadModel(glm::dvec3(3.7, 3.3, 2), "Demon.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -681,7 +656,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 
 						//std::cout << hitPos << std::endl;
 
-						float ambientStrength = 0.05f;
+						float ambientStrength = 0.00f;
 						glm::vec3 ambient = lightColor * ambientStrength;
 						// diffuse 
 						//normal = -normal;
@@ -689,7 +664,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 						float diff = std::max(glm::dot(normal, lightDir), 0.f);
 						glm::vec3 diffuse = lightColor * diff;
 						// specular
-						float specularStrength = 0.5;
+						float specularStrength = 0.15;
 						glm::vec3 viewDir = glm::normalize(camera.pos - hitPos);
 						glm::vec3 reflectDir = reflect(-lightDir, normal);
 						float spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
@@ -711,7 +686,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 			
 		}
 		else {
-			buffer[x][y] = glm::vec3(0, 0, 0);
+			buffer[x][y] = glm::vec3(0.05, 0.05, 0.05);
 		}
 
 		y++;
@@ -730,7 +705,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 	}
 }
 
-void VoxelScene::addPoint(glm::vec3 pos, glm::vec3 color)
+void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
 {
 	uint8_t level = 1;
 	float divLevel = 0.5f;
@@ -849,4 +824,40 @@ void VoxelScene::simplifyOctree(Octree<glm::vec3>* tree)
 	tree->object = new glm::vec3(*color);
 
 	//std::cout << "merged\n";
+}
+
+bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
+{
+	std::fstream fs(file, std::fstream::in);
+
+	if (fs.is_open() == true)
+	{
+		std::cout << "Loading model\n";
+
+		char buff[256];
+		std::string str = "";
+		char tmp;
+
+		std::string s1, s2, s3;
+		std::string s4, s5, s6;
+
+		while (fs.eof() == false)
+		{
+			fs >> s1 >> s2 >> s3 >> s4 >> s5 >> s6;
+
+			//I think there's a small bug with the loading of the model, probably due to floating point imprecision
+			//Adding a very small offset makes it disappear
+			addPoint(glm::dvec3(stof(s1), stof(s2), stof(s3)) + pos, glm::vec3(stof(s4), stof(s5), stof(s6)));
+
+			//fs.seekg((int)fs.tellg() + 1);
+
+			//fs.getline(buff, 256);
+		}
+
+		fs.close();
+
+		return true;
+	}
+
+	return false;
 }

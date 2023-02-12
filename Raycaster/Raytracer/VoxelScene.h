@@ -34,9 +34,10 @@ public:
 	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Octree<glm::vec3>** octreeHit, glm::vec3& hitPos,
 		glm::vec3& normal, float lvl = 1, MapEntrance* entrance = nullptr);
 
-	void addPoint(glm::vec3 pos, glm::vec3 color);
+	void addPoint(glm::dvec3 pos, glm::vec3 color);
 	void simplify();
 	void simplifyOctree(Octree<glm::vec3>* tree);
+	bool loadModel(glm::dvec3 pos, std::string file);
 	
 	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, std::atomic<bool>* ticket = nullptr);
 
@@ -55,7 +56,7 @@ private:
 	uint8_t levels = 7;
 	//float topLevelSize = 1; Assuming this will always be 1 simplifies things a little
 
-	glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
+	glm::vec3 lightColor = glm::vec3(1.2, 1.2, 1.2);
 
 	//glm::vec3 gridOffset = glm::vec3(10, 10, 10);
 };

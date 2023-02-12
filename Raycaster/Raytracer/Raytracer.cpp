@@ -35,6 +35,11 @@ int main(int argc, char *argv[])
 	ThreadPool* pool = ThreadPool::getInstance();
 	pool->start();
 
+	VoxelScene scene;
+
+	//scene.addPointLight(glm::vec3(1.75, 3, 0));
+	scene.addPointLight(glm::vec3(3.5, 3, 0));
+
 	Window window("Raycaster V1.0", windowWidth, windowHeight);
 
 	window.clear();
@@ -54,7 +59,7 @@ int main(int argc, char *argv[])
 
 
 	//Camera variables
-	glm::vec3 pos(3, 3.5, 0);  //x and y start position
+	glm::vec3 pos(3, 3.75, 0);  //x and y start position
 	float deg = 45;
 	glm::quat camRot;
 
@@ -66,16 +71,11 @@ int main(int argc, char *argv[])
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 
-	VoxelScene scene;
-
-	scene.addPointLight(glm::uvec3(2, 4, 1));
-
 	std::vector<std::vector<glm::vec3>> buffer;
 
 	buffer.resize(windowWidth, std::vector<glm::vec3>(windowHeight, glm::vec3(0,0,1)));
 
 	bool first = true;
-
 
 	while (!window.isClosed())///////////////////////////////////////////////////////////////////////////////Main loop
 	{
