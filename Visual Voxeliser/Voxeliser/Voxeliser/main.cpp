@@ -46,10 +46,13 @@ int main(int argc, char** argv) {
 
         mesh = vx_mesh_alloc(shapes[i].mesh.positions.size(), shapes[i].mesh.indices.size());
 
-        for (size_t f = 0; f < shapes[i].mesh.indices.size(); f++) {
+        for (size_t f = 0; f < shapes[i].mesh.indices.size(); f++) 
+        {
             mesh->indices[f] = shapes[i].mesh.indices[f];
         }
-        for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) {
+        
+        for (size_t v = 0; v < shapes[i].mesh.positions.size() / 3; v++) 
+        {
             mesh->vertices[v].x = shapes[i].mesh.positions[3*v+0];
             mesh->vertices[v].y = shapes[i].mesh.positions[3*v+1];
             mesh->vertices[v].z = shapes[i].mesh.positions[3*v+2];
@@ -118,7 +121,10 @@ int main(int argc, char** argv) {
             for (int j = 0; j < result->nvertices; ++j) {
                 file << result->vertices[j].x << " "
                      << result->vertices[j].y << " "
-                     << result->vertices[j].z << "\n";
+                     << result->vertices[j].z << " "
+                    << materials[shapes[i].mesh.material_ids[0]].diffuse[0] << " "
+                    << materials[shapes[i].mesh.material_ids[0]].diffuse[1] << " "
+                    << materials[shapes[i].mesh.material_ids[0]].diffuse[2] << "\n";
             }
         }
 
