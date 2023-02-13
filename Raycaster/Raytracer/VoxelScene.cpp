@@ -30,27 +30,25 @@ bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::
 	uint8_t a = 0;
 
 	double lvl2 = (double)lvl * 2.0;
-	glm::vec3 modifiedRay = rayDir;
-	glm::vec3 modifiedPos = pos;
 
-	if (modifiedRay.x < 0.0f)
+	if (rayDir.x < 0.0f)
 	{
-		modifiedPos.x = (octPos.x + lvl2/2.0)*2 - modifiedPos.x;
-		modifiedRay.x = -modifiedRay.x;
+		pos.x = (octPos.x + lvl2/2.0)*2 - pos.x;
+		rayDir.x = -rayDir.x;
 		a |= 4;
 	}
 
-	if (modifiedRay.y < 0.0f)
+	if (rayDir.y < 0.0f)
 	{
-		modifiedPos.y = (octPos.y + lvl2 / 2.0)*2 - modifiedPos.y;
-		modifiedRay.y = -modifiedRay.y;
+		pos.y = (octPos.y + lvl2 / 2.0)*2 - pos.y;
+		rayDir.y = -rayDir.y;
 		a |= 2;
 	}
 
-	if (modifiedRay.z < 0.0f)
+	if (rayDir.z < 0.0f)
 	{
-		modifiedPos.z = (octPos.z + lvl2 / 2.0)*2 - modifiedPos.z;
-		modifiedRay.z = -modifiedRay.z;
+		pos.z = (octPos.z + lvl2 / 2.0)*2 - pos.z;
+		rayDir.z = -rayDir.z;
 		a |= 1;
 	}
 
@@ -59,21 +57,21 @@ bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::
 	//To avoid division by 0.
 	for (uint8_t i = 0; i < 3; ++i)
 	{
-		if (modifiedRay[i] == 0.f)
+		if (rayDir[i] == 0.f)
 		{
-			modifiedRay[i] = std::numeric_limits<float>::epsilon();
+			rayDir[i] = std::numeric_limits<float>::epsilon();
 		}
 	}
 
 	for (uint8_t i = 0; i < 3; ++i)
 	{
-		t0[i] = ((double)octPos[i] - modifiedPos[i]) / (double)modifiedRay[i];
-		t1[i] = ((double)octPos[i] + lvl2 - modifiedPos[i]) / (double)modifiedRay[i];
+		t0[i] = ((double)octPos[i] - pos[i]) / (double)rayDir[i];
+		t1[i] = ((double)octPos[i] + lvl2 - pos[i]) / (double)rayDir[i];
 	}
 
 	if (std::max(std::max(t0[0], t0[1]), t0[2]) <= std::min(std::min(t1[0], t1[1]), t1[2]))
 	{
-		return procSubtree(t0, t1, oct, octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter);
+		return procSubtree(t0, t1, oct, octPos, lvl, a, octreeHit, normal, t, hitOnEnter);
 	}
 	else {
 		//std::cout << "error floating point precision " << std::max(std::max(t0[0], t0[1]), t0[2]) << " " << std::min(std::min(t1[0], t1[1]), t1[2]) << std::endl;
@@ -83,7 +81,7 @@ bool VoxelScene::rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::
 }
 
 bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* octree, const glm::vec3& octPos, 
-	glm::vec3 pos, float lvl, uint8_t a, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter)
+	float lvl, uint8_t a, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter)
 {
 	uint8_t currNode;
 
@@ -124,7 +122,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 		switch (currNode)
 		{
 		case 0:
-			if (procSubtree(t0, tm, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if (procSubtree(t0, tm, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
@@ -139,7 +137,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.z = tm.z;
 			tmp2.z = t1.z;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
@@ -154,7 +152,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.y = tm.y;
 			tmp2.y = t1.y;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
@@ -171,7 +169,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.z = tm.z;
 			tmp2.z = t1.z;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
@@ -186,7 +184,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.x = tm.x;
 			tmp2.x = t1.x;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
@@ -204,7 +202,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.z = tm.z;
 			tmp2.z = t1.z;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
@@ -221,7 +219,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			tmp1.y = tm.y;
 			tmp2.y = t1.y;
 
-			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if(procSubtree(tmp1, tmp2, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
@@ -231,7 +229,7 @@ bool VoxelScene::procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* oc
 			break;
 
 		case 7:
-			if (procSubtree(tm, t1, octree->tree + (int)(currNode ^ a), octPos, pos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
+			if (procSubtree(tm, t1, octree->tree + (int)(currNode ^ a), octPos, lvl, a, octreeHit, normal, t, hitOnEnter) == true)
 			{
 				hit = true;
 			}
