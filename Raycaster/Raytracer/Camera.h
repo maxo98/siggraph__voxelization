@@ -1,6 +1,9 @@
 #pragma once
 
 #include <gtx/quaternion.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/quaternion.hpp>
+
 
 class Camera
 {
@@ -15,4 +18,5 @@ public:
 	int windowWidth, windowHeight;
 
 	void rotateCamera(int x, int y, float speed);
+	void lookAt(glm::vec3 center);
 };

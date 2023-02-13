@@ -1,6 +1,8 @@
 #include "Camera.h"
 
 #include <SDL.h>
+#include <iostream>
+
 
 Camera::Camera(glm::vec3 _pos, glm::quat _camRot, float _fov, int width, int height)
 {
@@ -16,14 +18,18 @@ Camera::Camera(glm::vec3 _pos, glm::quat _camRot, float _fov, int width, int hei
 
 void Camera::rotateCamera(int x, int y, float speed)
 {
-	float xDistanceFromWindowCenter = x - windowWidth / 2.f;
-	float yDistanceFromWindowCenter = (windowHeight / 2.f) - y;
-	float yaw = xDistanceFromWindowCenter * speed;
-	float pitch = yDistanceFromWindowCenter * speed;
+	float yaw = x * speed;
+	float pitch = y * speed;
 	glm::vec3 eulerAngles = glm::eulerAngles(camRot);
 	eulerAngles.x = yaw;
 	eulerAngles.y = pitch;
-	eulerAngles.x = 0.f;
+	eulerAngles.z = 0.f;
 	camRot = glm::quat(eulerAngles);
 }
+
+void Camera::lookAt(glm::vec3 center)
+{
+	camRot = glm::conjugate(glm::toQuat(glm::lookAtLH(this->pos, center, glm::vec3(0, 1, 0))));
+}
+	
 

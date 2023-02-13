@@ -22,8 +22,8 @@ void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouse
 		
 		if(event.type == SDL_MOUSEMOTION)
 		{
-			_mouseX = event.motion.x;
-			_mouseY = event.motion.y;
+			_mouseX = event.motion.xrel;
+			_mouseY = event.motion.yrel;
 		}
 	}
 }
@@ -57,19 +57,19 @@ int main(int argc, char *argv[])
 
 	float mouvSpeed = 0.1;
 
-
 	//Camera variables
 	glm::vec3 pos(3, 3.75, 0);  //x and y start position
 	float deg = 45;
 	glm::quat camRot;
 
 	Camera cam(pos, camRot, 60, windowWidth, windowHeight);
-
-	SDL_ShowCursor(SDL_DISABLE);////////Options fenêtre SDL
+	cam.lookAt(glm::vec3(3, 3, 3));
+	
+	//SDL_ShowCursor(SDL_DISABLE);////////Options fenêtre SDL
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
-	SDL_SetWindowGrab(window.getWindow(), SDL_TRUE);
-	SDL_SetRelativeMouseMode(SDL_TRUE);
-	SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
+	//SDL_SetWindowGrab(window.getWindow(), SDL_TRUE);
+	//SDL_SetRelativeMouseMode(SDL_TRUE);
+	//SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 
 	std::vector<std::vector<glm::vec3>> buffer;
 
@@ -103,10 +103,11 @@ int main(int argc, char *argv[])
 		if (timer + 42 < SDL_GetTicks())////////////////////Display
 		{
 			//window.clear();
-
+			//SDL_GetRelativeMouseState(&mouseX, &mouseY);
+			//std::cout << "mouse x : " << mouseX << " mouse y : " << mouseY << std::endl;
 			if (lastMouseX != mouseX && lastMouseY != mouseY)//////Camera rotation
 			{
-				//std::cout << "mouse x : " << mouseX << " mouse y : " << mouseY << std::endl;
+				//
 				lastMouseX = mouseX;
 				lastMouseY = mouseY;
 				//cam.rotateCamera(mouseX, mouseY, mouvSpeed);
