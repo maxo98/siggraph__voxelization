@@ -569,15 +569,11 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 
 					rayDir = glm::normalize(hitPos - glm::vec3(pointLights[i]));
 
-					//std::cout << hitPos << std::endl;
-
 					traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
 
 					if (octreeHit == oHitLight)
 					{
 						hitByLight = true;
-
-						//std::cout << hitPos << std::endl;
 
 						float ambientStrength = 0.00f;
 						glm::vec3 ambient = lightColor * ambientStrength;
@@ -593,7 +589,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 						float spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
 						glm::vec3 specular = lightColor * specularStrength * spec;
 						glm::vec3 result = (ambient + diffuse) * color + specular;
-						//std::cout << lightDir << std::endl;
+
 						buffer[x][y] = glm::min(result, glm::vec3(1.f));
 						//buffer[x][y] = abs(normal);
 						//buffer[x][y] = color;
@@ -771,10 +767,6 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 			//I think there's a small bug with the loading of the model, probably due to floating point imprecision
 			//Adding a very small offset makes it disappear
 			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::vec3(stof(s4), stof(s5), stof(s6)));
-
-			//fs.seekg((int)fs.tellg() + 1);
-
-			//fs.getline(buff, 256);
 		}
 
 		fs.close();
