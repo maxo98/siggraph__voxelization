@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	VoxelScene scene;
 
 	//scene.addPointLight(glm::vec3(1.75, 3, 0));
-	scene.addPointLight(glm::vec3(3.5, 3, 0));
+	scene.addPointLight(glm::vec3(3.5, 4, 0));
 
 	Window window("Raycaster V1.0", windowWidth, windowHeight);
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	float mouvSpeed = 0.1;
 
 	//Camera variables
-	glm::vec3 pos(3, 3.75, 0);  //x and y start position
+	glm::vec3 pos(3, 5, 0);  //x and y start position
 	float deg = 45;
 	glm::quat camRot;
 
