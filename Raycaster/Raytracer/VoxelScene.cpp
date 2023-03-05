@@ -682,6 +682,52 @@ void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
 	}
 }
 
+bool VoxelScene::readPoint(glm::dvec3 pos, glm::vec3& color, int maxLevel)
+{
+	uint8_t level = 1;
+	float divLevel = 0.5f;
+
+	if (pos.x < 0 || pos.x >= worldMap.width || pos.y < 0 || pos.y >= worldMap.height || pos.z < 0 || pos.z >= worldMap.depth) return false;
+
+	Octree<glm::vec3>* currentTree = (worldMap.map + int(pos.x) * worldMap.height * worldMap.depth + int(pos.y) * worldMap.depth + int(pos.z));
+
+	//Check that we are within bounds
+
+	for (uint8_t i = 0; i < 3; i++)
+	{
+		pos[i] -= int(pos[i]);
+	}
+
+	while (level < maxLevel && currentTree->contains != OCTREE_CONTENT::FILLED && currentTree->contains != OCTREE_CONTENT::EMPTY)
+	{
+		level++;
+
+		uint8_t index = 0;
+
+		for (uint8_t i = 0; i < 3; i++)
+		{
+			if (pos[i] > divLevel)
+			{
+				pos[i] -= divLevel;
+
+				index |= 1 << (2 - i);
+			}
+		}
+
+		currentTree = currentTree->tree + index;
+		divLevel *= 0.5f;
+	}
+
+	//If empty create tree
+	if (currentTree->contains == OCTREE_CONTENT::EMPTY)
+	{
+		return false;
+	}
+
+	color = *currentTree->object;
+	return true;
+}
+
 void VoxelScene::simplify()
 {
 	for (int x = 0; x < worldMap.width; x++)

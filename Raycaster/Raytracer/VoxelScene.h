@@ -45,6 +45,7 @@ public:
 	uint8_t firstNode(glm::dvec3 t0, glm::dvec3 tm, float& t);
 	uint8_t newNode(float txm, uint8_t x, float tym, uint8_t y, float tzm, uint8_t z, float& t);
 	void newNormal(uint8_t oldNode, uint8_t newNode, glm::vec3& normal);
+	bool readPoint(glm::dvec3 pos, glm::vec3& color, int maxLevel);
 	bool rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::vec3 rayDir, glm::vec3 pos, float lvl, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
 	bool procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* octree, const glm::vec3& octPos,
 		float lvl, uint8_t a, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
