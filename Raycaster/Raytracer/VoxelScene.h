@@ -32,7 +32,7 @@ public:
 
 	inline void addPointLight(const glm::vec3& light) { pointLights.push_back(light); }
 	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Octree<glm::vec3>** octreeHit, glm::vec3& hitPos,
-		glm::vec3& normal, float lvl = 1, MapEntrance* entrance = nullptr);
+		glm::vec3& normal);
 
 	void addPoint(glm::dvec3 pos, glm::vec3 color);
 	void simplify();
@@ -55,6 +55,7 @@ private:
 
 	std::vector<glm::vec3> pointLights;
 	uint8_t levels = 7;
+	double baseLvl = 1;
 	//float topLevelSize = 1; Assuming this will always be 1 simplifies things a little
 
 	glm::vec3 lightColor = glm::vec3(1.2, 1.2, 1.2);

@@ -348,26 +348,23 @@ void VoxelScene::newNormal(uint8_t oldNode, uint8_t newNode, glm::vec3& normal)
 //which should be fine as long as the voxel map size is not equal to the max value of an unsigned int on any of the axis
 //NOTE2: hitPos needs to be fixed
 bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Octree<glm::vec3>** octreeHit, glm::vec3& hitPos,
-	glm::vec3& normal, float lvl, MapEntrance* entrance)
+	glm::vec3& normal)
 {
 	glm::uvec3 mapPos;//Case in which the ray currently is
 	glm::vec3 gridPos;//Worldpos of the voxel, used to know how we have traveled (in euclidean distance)
-	float sqrLvl = lvl/2 * lvl/2;
 
 	glm::uvec3 test;
 
 	Axis side = Axis::X;//Axis on which the the voxel was hit
 
 	//When entering the grid
-	if (entrance == nullptr)
-	{
-		//Currently assumes we are in the grid at the start
-		mapPos.x = int(pos.x);
-		mapPos.y = int(pos.y);
-		mapPos.z = int(pos.z);
 
-		gridPos = mapPos;
-	}
+	//Currently assumes we are in the grid at the start
+	mapPos.x = int(pos.x);
+	mapPos.y = int(pos.y);
+	mapPos.z = int(pos.z);
+
+	gridPos = mapPos;
 
 	//In which direction we're going for each axis (either +1, or -1)
 	glm::ivec3 step;
@@ -440,13 +437,13 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 				{
 					sideDist.x += deltaDist.x;
 					mapPos.x += step.x;
-					gridPos.x += step.x * lvl;
+					gridPos.x += step.x * baseLvl;
 					side = Axis::X;
 				}
 				else {
 					sideDist.z += deltaDist.z;
 					mapPos.z += step.z;
-					gridPos.z += step.z * lvl;
+					gridPos.z += step.z * baseLvl;
 					side = Axis::Z;
 				}
 			}
@@ -456,13 +453,13 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 				{
 					sideDist.y += deltaDist.y;
 					mapPos.y += step.y;
-					gridPos.y += step.y * lvl;
+					gridPos.y += step.y * baseLvl;
 					side = Axis::Y;
 				}
 				else {
 					sideDist.z += deltaDist.z;
 					mapPos.z += step.z;
-					gridPos.z += step.z * lvl;
+					gridPos.z += step.z * baseLvl;
 					side = Axis::Z;
 				}
 			}
@@ -472,7 +469,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 			hit = true;
 			*octreeHit = currentTree;
 
-			float halfLvl = lvl / 2;
+			float halfLvl = baseLvl / 2;
 			float t;
 
 			for (uint8_t i = 0; i < 3; ++i)
@@ -493,7 +490,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 						t = (gridPos[i] - pos[i]) / rayDirection;
 					}
 					else {
-						t = (gridPos[i] + lvl * 2.f - pos[i]) / rayDir[i];
+						t = (gridPos[i] + baseLvl * 2.f - pos[i]) / rayDir[i];
 					}
 				}
 			}
@@ -506,7 +503,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 			float t;
 			bool hitOnEnter = false;
 
-			hit = rayParam(currentTree, gridPos, rayDir, pos, lvl / 2.0, octreeHit, normal, t, hitOnEnter);
+			hit = rayParam(currentTree, gridPos, rayDir, pos, baseLvl / 2.0, octreeHit, normal, t, hitOnEnter);
 
 			if (hit == true)
 			{
