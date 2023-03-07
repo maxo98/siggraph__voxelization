@@ -9,11 +9,11 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>E:\Cedric\ESGI\siggraph__voxelization\Models\bunny.obj 0.001 0.001</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>E:\Cedric\ESGI\siggraph__voxelization\Models\smallTeapot.obj 0.0625 0.0625</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>E:\Cedric\ESGI\siggraph__voxelization\Models\bunny.obj 0.001 0.001</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"E:\Cedric\ESGI\siggraph__voxelization\Visual Voxeliser\Voxeliser\Voxeliser\Scene.obj" 0.0078125 0.0078125</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>
