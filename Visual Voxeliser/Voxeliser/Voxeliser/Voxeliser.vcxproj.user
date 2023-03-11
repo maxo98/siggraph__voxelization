@@ -13,7 +13,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>"E:\Cedric\ESGI\siggraph__voxelization\Visual Voxeliser\Voxeliser\Voxeliser\Scene.obj" 0.0078125 0.0078125</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"E:\Cedric\ESGI\siggraph__voxelization\Visual Voxeliser\Voxeliser\Voxeliser\doughnut.obj" 0.0078125 0.0078125</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

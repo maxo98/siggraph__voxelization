@@ -3,21 +3,14 @@
 #include <algorithm>
 #include <fstream>
 
-VoxelScene::VoxelScene()
+VoxelScene::VoxelScene(int _levels)
 {
 	worldMap.map = new Octree<glm::vec3>[MAP_WIDTH * MAP_HEIGHT * MAP_DEPTH];
 	worldMap.width = MAP_WIDTH;
 	worldMap.height = MAP_HEIGHT;
 	worldMap.depth = MAP_DEPTH;
 
-	loadModel(glm::dvec3(3, 3, 3), "Scene.txt");
-	//loadModel(glm::dvec3(3.7, 3.3, 2), "Demon.txt");
-
-	std::cout << "Simplifying\n";
-
-	simplify();
-
-	std::cout << "Done\n";
+	levels = _levels;
 }
 
 VoxelScene::~VoxelScene()
@@ -801,16 +794,49 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 		std::string s1, s2, s3;
 		std::string s4, s5, s6;
 
+		bool init = true;
+
 		while (fs.eof() == false)
 		{
 			fs >> s1 >> s2 >> s3 >> s4 >> s5 >> s6;
 
 			//I think there's a small bug with the loading of the model, probably due to floating point imprecision
 			//Adding a very small offset makes it disappear
+			glm::dvec3 point = glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos;
+
 			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::vec3(stof(s4), stof(s5), stof(s6)));
+
+			for (uint8_t i = 0; i < 3; i++)
+			{
+				if (min[i] > point[i] || init == true)
+				{
+					min[i] = point[i];
+				}
+
+				if (max[i] < point[i] || init == true)
+				{
+					max[i] = point[i];
+				}
+			}
+
+			init = false;
 		}
 
 		fs.close();
+
+		for (uint8_t i = 0; i < 3; i++)
+		{
+			std::cout << min[i] << " ";
+		}
+
+		std::cout << std::endl;
+
+		for (uint8_t i = 0; i < 3; i++)
+		{
+			std::cout << max[i] << " ";
+		}
+
+		std::cout << std::endl;
 
 		return true;
 	}

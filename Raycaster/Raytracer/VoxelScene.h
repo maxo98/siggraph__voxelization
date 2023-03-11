@@ -27,7 +27,7 @@ public:
 		glm::vec3 pos;
 	};
 
-	VoxelScene();
+	VoxelScene(int _levels);
 	~VoxelScene();
 
 	inline void addPointLight(const glm::vec3& light) { pointLights.push_back(light); }
@@ -50,15 +50,22 @@ public:
 	bool procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* octree, const glm::vec3& octPos,
 		float lvl, uint8_t a, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
 
+	glm::vec3 min, max;
+
 private:
 	VoxelMap worldMap;
 
 	std::vector<glm::vec3> pointLights;
-	uint8_t levels = 7;
+	uint8_t levels;
+	//7 -> 0.0078125
+	//8 -> 0.00390625
+	//9 -> 0.001953125
 	double baseLvl = 1;
 	//float topLevelSize = 1; Assuming this will always be 1 simplifies things a little
 
 	glm::vec3 lightColor = glm::vec3(1.2, 1.2, 1.2);
+
+
 
 	//glm::vec3 gridOffset = glm::vec3(10, 10, 10);
 };

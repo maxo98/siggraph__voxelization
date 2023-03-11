@@ -32,8 +32,6 @@
     <ClCompile Include="Neuroevolution\NeuralNetwork.cpp" />
     <ClCompile Include="Neuroevolution\Node.cpp" />
     <ClCompile Include="Neuroevolution\Species.cpp" />
-    <ClCompile Include="Neuroevolution\TestHyperneat.cpp" />
-    <ClCompile Include="Neuroevolution\ThreadPool.cpp" />
     <ClCompile Include="Neuroevolution\Utils.cpp" />
     <ClCompile Include="Raytracer.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
@@ -55,8 +53,6 @@
     <ClInclude Include="Neuroevolution\NeuralNetwork.h" />
     <ClInclude Include="Neuroevolution\Node.h" />
     <ClInclude Include="Neuroevolution\Species.h" />
-    <ClInclude Include="Neuroevolution\TestHyperneat.h" />
-    <ClInclude Include="Neuroevolution\ThreadPool.h" />
     <ClInclude Include="Neuroevolution\Utils.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="ThreadPool.h" />
