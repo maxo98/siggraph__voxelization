@@ -90,14 +90,14 @@ int main(int argc, char *argv[])
 	scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship7.txt");
 	scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship8.txt");
 
-	//scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon7.txt");
-	//scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon8.txt");
+	scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon7.txt");
+	scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon8.txt");
 
-	//scenes[4]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut7.txt");
-	//scenes[5]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut8.txt");
+	scenes[4]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut7.txt");
+	scenes[5]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut8.txt");
 
-	//scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
-	//scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
+	scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
+	scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	std::cout << "Simplifying\n";
 
