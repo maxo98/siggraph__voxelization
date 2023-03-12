@@ -612,12 +612,12 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 	}
 }
 
-void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
+bool VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
 {
 	uint8_t level = 1;
 	float divLevel = 0.5f;
 
-	if (pos.x < 0 || pos.x >= worldMap.width || pos.y < 0 || pos.y >= worldMap.height || pos.z < 0 || pos.z >= worldMap.depth) return;
+	if (pos.x < 0 || pos.x >= worldMap.width || pos.y < 0 || pos.y >= worldMap.height || pos.z < 0 || pos.z >= worldMap.depth) return false;
 
 	Octree<glm::vec3> *currentTree = (worldMap.map + int(pos.x) * worldMap.height * worldMap.depth + int(pos.y) * worldMap.depth + int(pos.z));
 
@@ -666,10 +666,12 @@ void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
 	{
 		currentTree->contains = OCTREE_CONTENT::FILLED;
 		*currentTree->object = color;
+
+		return true;
 	}
-	else {
-		//std::cout << "already filled\n";
-	}
+
+	//std::cout << "already filled\n";
+	return false;
 }
 
 bool VoxelScene::readPoint(glm::dvec3 pos, glm::vec3& color, int maxLevel)

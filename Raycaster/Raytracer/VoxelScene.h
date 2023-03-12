@@ -34,7 +34,7 @@ public:
 	bool traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec3& pos, Octree<glm::vec3>** octreeHit, glm::vec3& hitPos,
 		glm::vec3& normal);
 
-	void addPoint(glm::dvec3 pos, glm::vec3 color);
+	bool addPoint(glm::dvec3 pos, glm::vec3 color);
 	void simplify();
 	void simplifyOctree(Octree<glm::vec3>* tree);
 	bool loadModel(glm::dvec3 pos, std::string file);
@@ -49,6 +49,8 @@ public:
 	bool rayParam(Octree<glm::vec3>* oct, const glm::vec3& octPos, glm::vec3 rayDir, glm::vec3 pos, float lvl, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
 	bool procSubtree(glm::dvec3 t0, glm::dvec3 t1, Octree<glm::vec3>* octree, const glm::vec3& octPos,
 		float lvl, uint8_t a, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
+
+	inline void setLevels(uint8_t newLvl) { levels = newLvl; };
 
 	glm::vec3 min, max;
 
