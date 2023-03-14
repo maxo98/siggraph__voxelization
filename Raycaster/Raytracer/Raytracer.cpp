@@ -19,6 +19,8 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& esHyper, bool& validated, std::vector<VoxelScene*>& scenes, std::atomic<bool>* ticket = nullptr);
 int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector<VoxelScene*>& scenes);
 
+//#define LOAD
+
 std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
 	float dist = 0;
@@ -60,6 +62,8 @@ int main(int argc, char *argv[])
 	ThreadPool* pool = ThreadPool::getInstance();
 	pool->start();
 
+	Window window("Raycaster V1.0", windowWidth, windowHeight);
+
 	int renderScene = 0;// 4;
 	std::vector<VoxelScene*> scenes;
 	scenes.reserve(8);
@@ -70,8 +74,8 @@ int main(int argc, char *argv[])
 	scenes.push_back(new VoxelScene(8));
 	scenes.push_back(new VoxelScene(7));
 	scenes.push_back(new VoxelScene(8));
-	scenes.push_back(new VoxelScene(7));
-	scenes.push_back(new VoxelScene(8));
+	//scenes.push_back(new VoxelScene(7));
+	//scenes.push_back(new VoxelScene(8));
 
 	//scene.addPointLight(glm::vec3(1.75, 3, 0));
 	scenes[renderScene]->addPointLight(glm::vec3(3.5, 4, 0));
@@ -97,17 +101,19 @@ int main(int argc, char *argv[])
 	scenes[4]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut7.txt");
 	scenes[5]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut8.txt");
 
-	scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
-	scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
+	//scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
+	//scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	std::cout << "Simplifying\n";
 
 	for (int i = 0; i < scenes.size(); i++)
 	{
-		scenes[renderScene]->simplify();
+		scenes[i]->simplify();
 	}
 
 	std::cout << "Done\n";
+
+
 
 	NeatParameters neatparam;
 
@@ -240,7 +246,10 @@ int main(int argc, char *argv[])
 				inputPos[2] = z;
 				outputPos[2] = z / 2.0f;
 
-				hyper.addInput(inputPos);
+				if (x != 0 || y != 0 || z != 0)
+				{
+					hyper.addInput(inputPos);
+				}
 
 				if (x >= 0 && y >= 0 && z >= 0)
 				{
@@ -250,6 +259,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#ifndef LOAD
 	hyper.initNetworks();
 
 	hyper.generateNetworks();
@@ -262,16 +272,22 @@ int main(int argc, char *argv[])
 	hyper.saveHistory();
 
 	hyper.getGoat()->saveCurrentGenome();
+#endif // !LOAD
 
 	//Apply to check result
 
-	scenes[renderScene]->setLevels(8);
-
 	NeuralNetwork network;
+
+#ifndef LOAD
 	hyper.genomeToNetwork(*hyper.getGoat(), network);
+#else
+	Genome gen = Genome::loadGenome("saveGenome.txt");
+
+	hyper.genomeToNetwork(gen, network);
+#endif // !LOAD
 
 	std::vector<float> inputs;
-	inputs.resize(3 * 3 * 3);
+	inputs.resize(3 * 3 * 3 - 1);
 	std::vector<float> expectedOutputs;
 	expectedOutputs.resize(8);
 	std::vector<float> networkOutputs;
@@ -283,6 +299,8 @@ int main(int argc, char *argv[])
 	glm::vec3 colorHolder;
 
 	glm::dvec3 voxPos(0);
+
+	scenes.push_back(new VoxelScene(8));
 
 
 	for (voxPos[0] = scenes[renderScene]->min[0] - low; voxPos[0] <= (scenes[renderScene]->max[0] + low); voxPos[0] += low)
@@ -314,7 +332,7 @@ int main(int argc, char *argv[])
 
 							if (x >= 0 && y >= 0 && z >= 0)
 							{
-								expectedOutputs[outputCpt] = (scenes[renderScene + 1]->readPoint(outputPosition, colorHolder, 8) ? 1 : 0);
+								//expectedOutputs[outputCpt] = (scenes[renderScene + 1]->readPoint(outputPosition, colorHolder, 8) ? 1 : 0);
 								outputCpt++;
 							}
 						}
@@ -336,10 +354,11 @@ int main(int argc, char *argv[])
 						{
 							outputPosition[2] = z * high;
 
-							if (expectedOutputs[i] >= 1 && inputs[13] == 0)
+							if (expectedOutputs[i] >= 1)
 							{
 								colorHolder = glm::vec3(1, 0, 0);
-								scenes[renderScene]->addPoint(outputPosition, colorHolder);
+								scenes[scenes.size() - 1]->addPoint(outputPosition, colorHolder);
+								std::cout << outputPosition << std::endl;
 							}
 
 							i++;
@@ -350,9 +369,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	scenes[scenes.size() - 1]->simplify();
+	scenes[scenes.size() - 1]->addPointLight(glm::vec3(3.5, 4, 0));
 
 	//Rendering
-	Window window("Raycaster V1.0", windowWidth, windowHeight);
+	//Window window("Raycaster V1.0", windowWidth, windowHeight);
 
 	window.clear();
 
@@ -458,7 +479,7 @@ int main(int argc, char *argv[])
 					restWorkload = workloadFrac;
 
 					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
+					pool->queueJob(&VoxelScene::drawPixels, scenes[scenes.size() - 1], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
 					++threads;
 
 					x += currentWorkload / windowHeight;
@@ -492,7 +513,7 @@ int main(int argc, char *argv[])
 					count--;
 				}
 
-				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer);
+				scenes[scenes.size() - 1]->drawPixels(currentWorkload, x, y, window, cam, buffer);
 
 				timer = SDL_GetTicks();
 
@@ -643,7 +664,7 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 	int error = 0;
 
 	std::vector<float> inputs;
-	inputs.resize(3 * 3 * 3);
+	inputs.resize(3 * 3 * 3 - 1);
 	std::vector<float> expectedOutputs;
 	expectedOutputs.resize(8);
 	std::vector<float> networkOutputs;
@@ -682,8 +703,11 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 								inputPos[2] = z * low + pos[2];
 								outputPos[2] = z * high + pos[2];
 
-								inputs[inputCpt] = (scenes[sceneIndex]->readPoint(inputPos, colorHolder, 7) ? 1 : 0);
-								inputCpt++;
+								if (x != 0 || y != 0 || z != 0)
+								{
+									inputs[inputCpt] = (scenes[sceneIndex]->readPoint(inputPos, colorHolder, 7) ? 1 : 0);
+									inputCpt++;
+								}
 
 								if (x >= 0 && y >= 0 && z >= 0)
 								{
@@ -711,25 +735,25 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 		}
 
 		//Single isolated voxel test
-		for (int i = 0; i < inputs.size(); i++)
-		{
-			inputs[i] = 0;
-		}
+		//for (int i = 0; i < inputs.size(); i++)
+		//{
+		//	inputs[i] = 0;
+		//}
 
-		inputs[13] = 0;
+		//inputs[13] = 0;
 
-		network->compute(inputs, networkOutputs);
+		//network->compute(inputs, networkOutputs);
 
-		for (int i = 0; i < 8; i++)
-		{
-			if (networkOutputs[i] >= 1 && expectedOutputs[i] == 1)
-			{
-				good++;
-			}
-			else {
-				error++;
-			}
-		}
+		//for (int i = 0; i < 8; i++)
+		//{
+		//	if (networkOutputs[i] >= 1 && expectedOutputs[i] == 1)
+		//	{
+		//		good++;
+		//	}
+		//	else {
+		//		error++;
+		//	}
+		//}
 	}
 
 	if (error == 0)
