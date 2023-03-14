@@ -5,7 +5,8 @@
 #include "VoxelScene.h"
 #include "ThreadPool.h"
 #include <iomanip>
-#include "Neuroevolution/Hyperneat.h"
+#include "Hyperneat.h"
+
 
 #define PROGRAM_NAME "Raycaster V1.0"
 
@@ -65,12 +66,12 @@ int main(int argc, char *argv[])
 
 	scenes.push_back(new VoxelScene(7));
 	scenes.push_back(new VoxelScene(8));
-	//scenes.push_back(new VoxelScene(7));
-	//scenes.push_back(new VoxelScene(8));
-	//scenes.push_back(new VoxelScene(7));
-	//scenes.push_back(new VoxelScene(8));
-	//scenes.push_back(new VoxelScene(7));
-	//scenes.push_back(new VoxelScene(8));
+	scenes.push_back(new VoxelScene(7));
+	scenes.push_back(new VoxelScene(8));
+	scenes.push_back(new VoxelScene(7));
+	scenes.push_back(new VoxelScene(8));
+	scenes.push_back(new VoxelScene(7));
+	scenes.push_back(new VoxelScene(8));
 
 	//scene.addPointLight(glm::vec3(1.75, 3, 0));
 	scenes[renderScene]->addPointLight(glm::vec3(3.5, 4, 0));
@@ -90,14 +91,14 @@ int main(int argc, char *argv[])
 	scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship7.txt");
 	scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship8.txt");
 
-	//scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon7.txt");
-	//scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon8.txt");
+	scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon7.txt");
+	scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon8.txt");
 
-	//scenes[4]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut7.txt");
-	//scenes[5]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut8.txt");
+	scenes[4]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut7.txt");
+	scenes[5]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut8.txt");
 
-	//scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
-	//scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
+	scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
+	scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -308,12 +309,12 @@ int main(int argc, char *argv[])
 							inputPosition[2] = z * low + voxPos[2];
 							outputPosition[2] = z * high + voxPos[2];
 
-							inputs[inputCpt] = (scenes[renderScene]->readPoint(inputPosition, colorHolder, 8) ? 1 : 0);
+							inputs[inputCpt] = (scenes[renderScene]->readPoint(inputPosition, colorHolder, 7) ? 1 : 0);
 							inputCpt++;
 
 							if (x >= 0 && y >= 0 && z >= 0)
 							{
-								expectedOutputs[outputCpt] = (scenes[renderScene + 1]->readPoint(outputPosition, colorHolder, 9) ? 1 : 0);
+								expectedOutputs[outputCpt] = (scenes[renderScene + 1]->readPoint(outputPosition, colorHolder, 8) ? 1 : 0);
 								outputCpt++;
 							}
 						}
@@ -325,26 +326,20 @@ int main(int argc, char *argv[])
 				int i = 0;
 				for (int x = 0; x <= 1; x++)
 				{
-					outputPosition[0] = x * high + std::numeric_limits<float>::epsilon();
+					outputPosition[0] = x * high;
 
 					for (int y = 0; y <= 1; y++)
 					{
-						outputPosition[1] = y * high + std::numeric_limits<float>::epsilon();
+						outputPosition[1] = y * high;
 
 						for (int z = 0; z <= 1; z++)
 						{
-							outputPosition[2] = z * high + std::numeric_limits<float>::epsilon();
+							outputPosition[2] = z * high;
 
-							if (networkOutputs[i] >= 1 && inputs[13] == 0)
+							if (expectedOutputs[i] >= 1 && inputs[13] == 0)
 							{
 								colorHolder = glm::vec3(1, 0, 0);
-								if (scenes[renderScene]->addPoint(outputPosition, colorHolder) == true)
-								{
-									std::cout << "Happened\n";
-								}
-								else {
-									std::cout << "Nope\n";
-								}
+								scenes[renderScene]->addPoint(outputPosition, colorHolder);
 							}
 
 							i++;
@@ -705,14 +700,7 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 					{
 						if ((networkOutputs[i] >= 1 && expectedOutputs[i] == 1) || (networkOutputs[i] < 0 && expectedOutputs[i] == 0))
 						{
-							if (inputs[13] == 0)
-							{
-								good++;
-							}
-							else {
-								good += 0.25;
-							}
-							
+							good += 1;
 						}
 						else {
 							error++;							

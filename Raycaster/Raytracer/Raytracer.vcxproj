@@ -19,42 +19,40 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Activation.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Neuroevolution\Activation.cpp" />
-    <ClCompile Include="Neuroevolution\CPPN_Neat.cpp" />
-    <ClCompile Include="Neuroevolution\ES_Hyperneat.cpp" />
-    <ClCompile Include="Neuroevolution\GeneConnection.cpp" />
-    <ClCompile Include="Neuroevolution\GeneNode.cpp" />
-    <ClCompile Include="Neuroevolution\Genome.cpp" />
-    <ClCompile Include="Neuroevolution\HyperBackprop.cpp" />
-    <ClCompile Include="Neuroevolution\Hyperneat.cpp" />
-    <ClCompile Include="Neuroevolution\Neat.cpp" />
-    <ClCompile Include="Neuroevolution\NeuralNetwork.cpp" />
-    <ClCompile Include="Neuroevolution\Node.cpp" />
-    <ClCompile Include="Neuroevolution\Species.cpp" />
-    <ClCompile Include="Neuroevolution\Utils.cpp" />
+    <ClCompile Include="CPPN_Neat.cpp" />
+    <ClCompile Include="ES_Hyperneat.cpp" />
+    <ClCompile Include="GeneConnection.cpp" />
+    <ClCompile Include="GeneNode.cpp" />
+    <ClCompile Include="Genome.cpp" />
+    <ClCompile Include="HyperBackprop.cpp" />
+    <ClCompile Include="Hyperneat.cpp" />
+    <ClCompile Include="Neat.cpp" />
+    <ClCompile Include="NeuralNetwork.cpp" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="Raytracer.cpp" />
+    <ClCompile Include="Species.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="VoxelScene.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Activation.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="Neuroevolution\Activation.h" />
-    <ClInclude Include="Neuroevolution\CPPN_Neat.h" />
-    <ClInclude Include="Neuroevolution\ES_Hyperneat.h" />
-    <ClInclude Include="Neuroevolution\GeneConnection.h" />
-    <ClInclude Include="Neuroevolution\GeneNode.h" />
-    <ClInclude Include="Neuroevolution\Genome.h" />
-    <ClInclude Include="Neuroevolution\HyperBackprop.h" />
-    <ClInclude Include="Neuroevolution\Hyperneat.h" />
-    <ClInclude Include="Neuroevolution\Neat.h" />
-    <ClInclude Include="Neuroevolution\NeuralNetwork.h" />
-    <ClInclude Include="Neuroevolution\Node.h" />
-    <ClInclude Include="Neuroevolution\Species.h" />
-    <ClInclude Include="Neuroevolution\Utils.h" />
+    <ClInclude Include="CPPN_Neat.h" />
+    <ClInclude Include="ES_Hyperneat.h" />
+    <ClInclude Include="GeneConnection.h" />
+    <ClInclude Include="GeneNode.h" />
+    <ClInclude Include="Genome.h" />
+    <ClInclude Include="HyperBackprop.h" />
+    <ClInclude Include="Hyperneat.h" />
+    <ClInclude Include="Neat.h" />
+    <ClInclude Include="NeuralNetwork.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="Octree.h" />
+    <ClInclude Include="Species.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="VoxelScene.h" />
