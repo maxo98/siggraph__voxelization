@@ -19,7 +19,7 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& esHyper, bool& validated, std::vector<VoxelScene*>& scenes, std::atomic<bool>* ticket = nullptr);
 int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector<VoxelScene*>& scenes);
 
-//#define LOAD
+#define LOAD
 
 std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -344,21 +344,20 @@ int main(int argc, char *argv[])
 				int i = 0;
 				for (int x = 0; x <= 1; x++)
 				{
-					outputPosition[0] = x * high;
+					outputPosition[0] = x * high + voxPos[0];
 
 					for (int y = 0; y <= 1; y++)
 					{
-						outputPosition[1] = y * high;
+						outputPosition[1] = y * high + voxPos[1];
 
 						for (int z = 0; z <= 1; z++)
 						{
-							outputPosition[2] = z * high;
+							outputPosition[2] = z * high + voxPos[2];
 
-							if (expectedOutputs[i] >= 1)
+							if (networkOutputs[i] >= 1)
 							{
-								colorHolder = glm::vec3(1, 0, 0);
+								colorHolder = glm::vec3(0.8, 0.8, 0.8);
 								scenes[scenes.size() - 1]->addPoint(outputPosition, colorHolder);
-								std::cout << outputPosition << std::endl;
 							}
 
 							i++;
