@@ -19,7 +19,7 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& esHyper, bool& validated, std::vector<VoxelScene*>& scenes, std::atomic<bool>* ticket = nullptr);
 int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector<VoxelScene*>& scenes);
 
-#define LOAD
+//#define LOAD
 
 std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -33,7 +33,7 @@ std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<fl
 
 	std::vector<float> p3;
 
-	p3.push_back(2 - sqrt(dist));
+	p3.push_back(3 - sqrt(dist));
 
 	p3.push_back(1);//Bias
 
@@ -231,17 +231,17 @@ int main(int argc, char *argv[])
 	//output 0.5, 0.5, 0
 	//output 0.5, 0.5, 0.5
 
-	for (int x = -1; x <= 1; x++)
+	for (int x = -2; x <= 2; x++)
 	{
 		inputPos[0] = x;
 		outputPos[0] = x / 2.0f;
 
-		for (int y = -1; y <= 1; y++)
+		for (int y = -2; y <= 2; y++)
 		{
 			inputPos[1] = y;
 			outputPos[1] = y / 2.0f;
 
-			for (int z = -1; z <= 1; z++)
+			for (int z = -2; z <= 2; z++)
 			{
 				inputPos[2] = z;
 				outputPos[2] = z / 2.0f;
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
 					hyper.addInput(inputPos);
 				}
 
-				if (x >= 0 && y >= 0 && z >= 0)
+				if (x >= 0 && y >= 0 && z >= 0 && x < 2 && y < 2 && z < 2)
 				{
 					hyper.addOutput(outputPos);
 				}
@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
 #endif // !LOAD
 
 	std::vector<float> inputs;
-	inputs.resize(3 * 3 * 3 - 1);
+	inputs.resize(5 * 5 * 5 - 1);
 	std::vector<float> expectedOutputs;
 	expectedOutputs.resize(8);
 	std::vector<float> networkOutputs;
@@ -312,29 +312,23 @@ int main(int argc, char *argv[])
 				int inputCpt = 0;
 				int outputCpt = 0;
 
-				for (int x = -1; x <= 1; x++)
+				for (int x = -2; x <= 2; x++)
 				{
 					inputPosition[0] = x * low + voxPos[0];
 					outputPosition[0] = x * high + voxPos[0];
 
-					for (int y = -1; y <= 1; y++)
+					for (int y = -2; y <= 2; y++)
 					{
 						inputPosition[1] = y * low + voxPos[1];
 						outputPosition[1] = y * high + voxPos[1];
 
-						for (int z = -1; z <= 1; z++)
+						for (int z = -2; z <= 2; z++)
 						{
 							inputPosition[2] = z * low + voxPos[2];
 							outputPosition[2] = z * high + voxPos[2];
 
 							inputs[inputCpt] = (scenes[renderScene]->readPoint(inputPosition, colorHolder, 7) ? 1 : 0);
 							inputCpt++;
-
-							if (x >= 0 && y >= 0 && z >= 0)
-							{
-								//expectedOutputs[outputCpt] = (scenes[renderScene + 1]->readPoint(outputPosition, colorHolder, 8) ? 1 : 0);
-								outputCpt++;
-							}
 						}
 					}
 				}
@@ -390,12 +384,12 @@ int main(int argc, char *argv[])
 	float mouvSpeed = 0.1;
 
 	//Camera variables
-	glm::vec3 pos(3, 3.25, 0);  //x and y start position
+	glm::vec3 pos(3, 3, 0);  //x and y start position
 	float deg = 45;
 	glm::quat camRot;
 
 	Camera cam(pos, camRot, 60, windowWidth, windowHeight);
-	cam.lookAt(glm::vec3(3, 3.5, 3.3));
+	cam.lookAt(glm::vec3(3, 3, 3.3));
 	
 	//SDL_ShowCursor(SDL_DISABLE);////////Options fenêtre SDL
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
@@ -558,7 +552,7 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 1 && validated == false; i3++)
+	for (int i3 = 0; i3 < 20 && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
@@ -663,7 +657,7 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 	int error = 0;
 
 	std::vector<float> inputs;
-	inputs.resize(3 * 3 * 3 - 1);
+	inputs.resize(5 * 5 * 5 - 1);
 	std::vector<float> expectedOutputs;
 	expectedOutputs.resize(8);
 	std::vector<float> networkOutputs;
@@ -687,17 +681,17 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 					int inputCpt = 0;
 					int outputCpt = 0;
 
-					for (int x = -1; x <= 1; x++)
+					for (int x = -2; x <= 2; x++)
 					{
 						inputPos[0] = x * low + pos[0];
 						outputPos[0] = x * high + pos[0];
 
-						for (int y = -1; y <= 1; y++)
+						for (int y = -2; y <= 2; y++)
 						{
 							inputPos[1] = y * low + pos[1];
 							outputPos[1] = y * high + pos[1];
 
-							for (int z = -1; z <= 1; z++)
+							for (int z = -2; z <= 2; z++)
 							{
 								inputPos[2] = z * low + pos[2];
 								outputPos[2] = z * high + pos[2];
@@ -708,7 +702,7 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 									inputCpt++;
 								}
 
-								if (x >= 0 && y >= 0 && z >= 0)
+								if (x >= 0 && y >= 0 && z >= 0 && x < 2 && y < 2 && z < 2)
 								{
 									expectedOutputs[outputCpt] = (scenes[sceneIndex + 1]->readPoint(outputPos, colorHolder, 8) ? 1 : 0);
 									outputCpt++;
