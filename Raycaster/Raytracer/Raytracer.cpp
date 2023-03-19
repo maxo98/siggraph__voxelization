@@ -33,7 +33,7 @@ std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<fl
 
 	std::vector<float> p3;
 
-	p3.push_back(3 - sqrt(dist));
+	p3.push_back((5.0 - sqrt(dist))/5.0);
 
 	p3.push_back(1);//Bias
 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
 	Window window("Raycaster V1.0", windowWidth, windowHeight);
 
-	int renderScene = 0;// 4;
+	int renderScene = 2;// 4;
 	std::vector<VoxelScene*> scenes;
 	scenes.reserve(8);
 
@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
 	scenes.push_back(new VoxelScene(8));
 	scenes.push_back(new VoxelScene(7));
 	scenes.push_back(new VoxelScene(8));
-	scenes.push_back(new VoxelScene(7));
-	scenes.push_back(new VoxelScene(8));
+	//scenes.push_back(new VoxelScene(7));
+	//scenes.push_back(new VoxelScene(8));
 	//scenes.push_back(new VoxelScene(7));
 	//scenes.push_back(new VoxelScene(8));
 
@@ -92,17 +92,23 @@ int main(int argc, char *argv[])
 	//2.23438 2.02953 2.64453
 	//3.76367 3.07836 3.67578
 
-	scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship7.txt");
-	scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship8.txt");
+	//scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship7.txt");
+	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Spaceship8.txt");
 
-	scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon7.txt");
-	scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon8.txt");
+	//scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon7.txt");
+	//scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Cannon8.txt");
 
-	scenes[4]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut7.txt");
-	scenes[5]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut8.txt");
+	//scenes[4]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut7.txt");
+	//scenes[5]->loadModel(glm::dvec3(3, 2.01, 3), "doughnut8.txt");
 
 	//scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
 	//scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
+
+	scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
+	scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
+
+	scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Sphere7.txt");
+	scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -231,17 +237,17 @@ int main(int argc, char *argv[])
 	//output 0.5, 0.5, 0
 	//output 0.5, 0.5, 0.5
 
-	for (int x = -2; x <= 2; x++)
+	for (int x = -5; x <= 5; x++)
 	{
 		inputPos[0] = x;
 		outputPos[0] = x / 2.0f;
 
-		for (int y = -2; y <= 2; y++)
+		for (int y = -5; y <= 5; y++)
 		{
 			inputPos[1] = y;
 			outputPos[1] = y / 2.0f;
 
-			for (int z = -2; z <= 2; z++)
+			for (int z = -5; z <= 5; z++)
 			{
 				inputPos[2] = z;
 				outputPos[2] = z / 2.0f;
@@ -287,7 +293,7 @@ int main(int argc, char *argv[])
 #endif // !LOAD
 
 	std::vector<float> inputs;
-	inputs.resize(5 * 5 * 5 - 1);
+	inputs.resize(11 * 11 * 11 - 1);
 	std::vector<float> expectedOutputs;
 	expectedOutputs.resize(8);
 	std::vector<float> networkOutputs;
@@ -312,17 +318,17 @@ int main(int argc, char *argv[])
 				int inputCpt = 0;
 				int outputCpt = 0;
 
-				for (int x = -2; x <= 2; x++)
+				for (int x = -5; x <= 5; x++)
 				{
 					inputPosition[0] = x * low + voxPos[0];
 					outputPosition[0] = x * high + voxPos[0];
 
-					for (int y = -2; y <= 2; y++)
+					for (int y = -5; y <= 5; y++)
 					{
 						inputPosition[1] = y * low + voxPos[1];
 						outputPosition[1] = y * high + voxPos[1];
 
-						for (int z = -2; z <= 2; z++)
+						for (int z = -5; z <= 5; z++)
 						{
 							inputPosition[2] = z * low + voxPos[2];
 							outputPosition[2] = z * high + voxPos[2];
@@ -657,7 +663,7 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 	int error = 0;
 
 	std::vector<float> inputs;
-	inputs.resize(5 * 5 * 5 - 1);
+	inputs.resize(11 * 11 * 11 - 1);
 	std::vector<float> expectedOutputs;
 	expectedOutputs.resize(8);
 	std::vector<float> networkOutputs;
@@ -681,17 +687,17 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 					int inputCpt = 0;
 					int outputCpt = 0;
 
-					for (int x = -2; x <= 2; x++)
+					for (int x = -5; x <= 5; x++)
 					{
 						inputPos[0] = x * low + pos[0];
 						outputPos[0] = x * high + pos[0];
 
-						for (int y = -2; y <= 2; y++)
+						for (int y = -5; y <= 5; y++)
 						{
 							inputPos[1] = y * low + pos[1];
 							outputPos[1] = y * high + pos[1];
 
-							for (int z = -2; z <= 2; z++)
+							for (int z = -5; z <= 5; z++)
 							{
 								inputPos[2] = z * low + pos[2];
 								outputPos[2] = z * high + pos[2];
