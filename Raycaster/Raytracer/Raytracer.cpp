@@ -15,9 +15,14 @@
 
 #define MULTITHREAD
 
-bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo);
-void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& esHyper, bool& validated, std::vector<VoxelScene*>& scenes, std::atomic<bool>* ticket = nullptr);
-int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector<VoxelScene*>& scenes);
+bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo, 
+	const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs);
+void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& esHyper, bool& validated, std::vector<VoxelScene*>& scenes, 
+	const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs, std::atomic<bool>* ticket = nullptr);
+int sceneTest(NeuralNetwork* network, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<float>>& inputs, 
+	const std::vector<std::vector<float>>& expectedOutputs);
+
+void applyResult(NeuralNetwork* network, std::vector<VoxelScene*>& scenes, int renderScene);
 
 //#define LOAD
 
@@ -265,14 +270,77 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	std::vector<std::vector<float>> inputs;
+	std::vector<std::vector<float>> expectedOutputs;
+
+	const double high = 0.00390625;
+	const double low = 0.0078125;
+
+	glm::dvec3 inputPosition, outputPosition;
+	glm::vec3 colorHolder;
+
+	glm::dvec3 position(0);
+
+	for (int sceneIndex = 0; sceneIndex < scenes.size(); sceneIndex += 2)
+	{
+		for (position[0] = scenes[sceneIndex]->min[0] - low; position[0] <= (scenes[sceneIndex]->max[0] + low); position[0] += low)
+		{
+			for (position[1] = scenes[sceneIndex]->min[1] - low; position[1] <= (scenes[sceneIndex]->max[1] + low); position[1] += low)
+			{
+				for (position[2] = scenes[sceneIndex]->min[2] - low; position[2] <= (scenes[sceneIndex]->max[2] + low); position[2] += low)
+				{
+					inputs.push_back(std::vector<float>());
+					inputs.back().resize(11 * 11 * 11 - 1);
+					expectedOutputs.push_back(std::vector<float>());
+					expectedOutputs.back().resize(8);
+
+					int inputCpt = 0;
+					int outputCpt = 0;
+
+					for (int x = -5; x <= 5; x++)
+					{
+						inputPosition[0] = x * low + position[0];
+						outputPosition[0] = x * high + position[0];
+
+						for (int y = -5; y <= 5; y++)
+						{
+							inputPosition[1] = y * low + position[1];
+							outputPosition[1] = y * high + position[1];
+
+							for (int z = -5; z <= 5; z++)
+							{
+								inputPosition[2] = z * low + position[2];
+								outputPosition[2] = z * high + position[2];
+
+								if (x != 0 || y != 0 || z != 0)
+								{
+									inputs.back()[inputCpt] = (scenes[sceneIndex]->readPoint(inputPosition, colorHolder, 7) ? 1 : 0);
+									inputCpt++;
+								}
+
+								if (x >= 0 && y >= 0 && z >= 0 && x < 2 && y < 2 && z < 2)
+								{
+									expectedOutputs.back()[outputCpt] = (scenes[sceneIndex + 1]->readPoint(outputPosition, colorHolder, 8) ? 1 : 0);
+									outputCpt++;
+								}
+							}
+						}
+					}
+
+
+				}
+			}
+		}
+	}
+
 #ifndef LOAD
 	hyper.initNetworks();
 
 	hyper.generateNetworks();
 
 	//Do test
-	//Also test for single isolated voxel
-	hypeneatTest(popSize, scenes, hyper);
+	//Also test for single isolated voxel, or not
+	hypeneatTest(popSize, scenes, hyper, inputs, expectedOutputs);
 
 	//Save
 	hyper.saveHistory();
@@ -292,84 +360,7 @@ int main(int argc, char *argv[])
 	hyper.genomeToNetwork(gen, network);
 #endif // !LOAD
 
-	std::vector<float> inputs;
-	inputs.resize(11 * 11 * 11 - 1);
-	std::vector<float> expectedOutputs;
-	expectedOutputs.resize(8);
-	std::vector<float> networkOutputs;
-
-	const double high = 0.00390625;
-	const double low = 0.0078125;
-
-	glm::dvec3 inputPosition, outputPosition;
-	glm::vec3 colorHolder;
-
-	glm::dvec3 voxPos(0);
-
-	scenes.push_back(new VoxelScene(8));
-
-
-	for (voxPos[0] = scenes[renderScene]->min[0] - low; voxPos[0] <= (scenes[renderScene]->max[0] + low); voxPos[0] += low)
-	{
-		for (voxPos[1] = scenes[renderScene]->min[1] - low; voxPos[1] <= (scenes[renderScene]->max[1] + low); voxPos[1] += low)
-		{
-			for (voxPos[2] = scenes[renderScene]->min[2] - low; voxPos[2] <= (scenes[renderScene]->max[2] + low); voxPos[2] += low)
-			{
-				int inputCpt = 0;
-				int outputCpt = 0;
-
-				for (int x = -5; x <= 5; x++)
-				{
-					inputPosition[0] = x * low + voxPos[0];
-					outputPosition[0] = x * high + voxPos[0];
-
-					for (int y = -5; y <= 5; y++)
-					{
-						inputPosition[1] = y * low + voxPos[1];
-						outputPosition[1] = y * high + voxPos[1];
-
-						for (int z = -5; z <= 5; z++)
-						{
-							inputPosition[2] = z * low + voxPos[2];
-							outputPosition[2] = z * high + voxPos[2];
-
-							inputs[inputCpt] = (scenes[renderScene]->readPoint(inputPosition, colorHolder, 7) ? 1 : 0);
-							inputCpt++;
-						}
-					}
-				}
-
-				network.compute(inputs, networkOutputs);
-
-				int i = 0;
-				for (int x = 0; x <= 1; x++)
-				{
-					outputPosition[0] = x * high + voxPos[0];
-
-					for (int y = 0; y <= 1; y++)
-					{
-						outputPosition[1] = y * high + voxPos[1];
-
-						for (int z = 0; z <= 1; z++)
-						{
-							outputPosition[2] = z * high + voxPos[2];
-
-							if (networkOutputs[i] >= 1)
-							{
-								colorHolder = glm::vec3(0.8, 0.8, 0.8);
-								scenes[scenes.size() - 1]->addPoint(outputPosition, colorHolder);
-							}
-
-							i++;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	scenes[scenes.size() - 1]->simplify();
-	scenes[scenes.size() - 1]->addPointLight(glm::vec3(3.5, 4, 0));
+	applyResult(&network, scenes, renderScene);
 
 	//Rendering
 	//Window window("Raycaster V1.0", windowWidth, windowHeight);
@@ -550,7 +541,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo)
+bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo, const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs)
 {
 	std::vector<float> fitness;
 
@@ -605,7 +596,7 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 			restWorkload = workloadFrac;
 
 			tickets.emplace_back(false);
-			pool->queueJob(evaluate, startIndex, currentWorkload + floor(restWorkload), std::ref(fitness), std::ref(algo), std::ref(validated), std::ref(scenes), &tickets.back());
+			pool->queueJob(evaluate, startIndex, currentWorkload + floor(restWorkload), std::ref(fitness), std::ref(algo), std::ref(validated), std::ref(scenes), std::ref(inputs), std::ref(expectedOutputs), &tickets.back());
 			++threads;
 
 			count += currentWorkload + floor(restWorkload);
@@ -618,7 +609,7 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 #endif //MULTITHREAD
 		currentWorkload = totalWorkload - count;
 
-		evaluate(startIndex, currentWorkload, fitness, algo, validated, scenes);
+		evaluate(startIndex, currentWorkload, fitness, algo, validated, scenes, inputs, expectedOutputs);
 
 		for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
 		{
@@ -636,13 +627,13 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 }
 
 
-void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& algo, bool& validated, std::vector<VoxelScene*>& scenes, std::atomic<bool>* ticket)
+void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& algo, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs, std::atomic<bool>* ticket)
 {
 	for (int i = startIndex; i < (startIndex + currentWorkload); i++)
 	{
 		bool tmp = false;
 
-		fitness[i] = sceneTest(algo.getNeuralNetwork(i), false, tmp, scenes);
+		fitness[i] = sceneTest(algo.getNeuralNetwork(i), tmp, scenes, inputs, expectedOutputs);
 
 		if (tmp == true)
 		{
@@ -657,11 +648,62 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 	}
 }
 
-int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector<VoxelScene*>& scenes)
+int sceneTest(NeuralNetwork* network, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs)
 {
 	int good = 0;
 	int error = 0;
 
+	std::vector<float> networkOutputs;
+
+	for (int cpt = 0; cpt < inputs.size(); cpt++)
+	{
+		network->compute(inputs[cpt], networkOutputs);
+
+		for (int i = 0; i < 8; i++)
+		{
+			if ((networkOutputs[i] >= 1 && expectedOutputs[cpt][i] == 1) || (networkOutputs[i] < 0 && expectedOutputs[cpt][i] == 0))
+			{
+				good += 1;
+			}
+			else {
+				error++;
+			}
+		}
+	}
+
+
+
+	//Single isolated voxel test
+	//for (int i = 0; i < inputs.size(); i++)
+	//{
+	//	inputs[i] = 0;
+	//}
+
+	//inputs[13] = 0;
+
+	//network->compute(inputs, networkOutputs);
+
+	//for (int i = 0; i < 8; i++)
+	//{
+	//	if (networkOutputs[i] >= 1 && expectedOutputs[i] == 1)
+	//	{
+	//		good++;
+	//	}
+	//	else {
+	//		error++;
+	//	}
+	//}
+
+	if (error == 0)
+	{
+		validated = true;
+	}
+
+	return good;
+}
+
+void applyResult(NeuralNetwork* network, std::vector<VoxelScene*>& scenes, int renderScene)
+{
 	std::vector<float> inputs;
 	inputs.resize(11 * 11 * 11 - 1);
 	std::vector<float> expectedOutputs;
@@ -671,94 +713,73 @@ int sceneTest(NeuralNetwork* network, bool display, bool& validated, std::vector
 	const double high = 0.00390625;
 	const double low = 0.0078125;
 
-	glm::dvec3 inputPos, outputPos; 
+	glm::dvec3 inputPosition, outputPosition;
 	glm::vec3 colorHolder;
 
-	glm::dvec3 pos(0);
+	glm::dvec3 voxPos(0);
 
-	for (int sceneIndex = 0; sceneIndex < scenes.size(); sceneIndex+=2)
+	scenes.push_back(new VoxelScene(8));
+
+
+	for (voxPos[0] = scenes[renderScene]->min[0] - low; voxPos[0] <= (scenes[renderScene]->max[0] + low); voxPos[0] += low)
 	{
-		for (pos[0] = scenes[sceneIndex]->min[0] - low; pos[0] <= (scenes[sceneIndex]->max[0] + low); pos[0] += low)
+		for (voxPos[1] = scenes[renderScene]->min[1] - low; voxPos[1] <= (scenes[renderScene]->max[1] + low); voxPos[1] += low)
 		{
-			for (pos[1] = scenes[sceneIndex]->min[1] - low; pos[1] <= (scenes[sceneIndex]->max[1] + low); pos[1] += low)
+			for (voxPos[2] = scenes[renderScene]->min[2] - low; voxPos[2] <= (scenes[renderScene]->max[2] + low); voxPos[2] += low)
 			{
-				for (pos[2] = scenes[sceneIndex]->min[2] - low; pos[2] <= (scenes[sceneIndex]->max[2] + low); pos[2] += low)
+				int inputCpt = 0;
+				int outputCpt = 0;
+
+				for (int x = -5; x <= 5; x++)
 				{
-					int inputCpt = 0;
-					int outputCpt = 0;
+					inputPosition[0] = x * low + voxPos[0];
+					outputPosition[0] = x * high + voxPos[0];
 
-					for (int x = -5; x <= 5; x++)
+					for (int y = -5; y <= 5; y++)
 					{
-						inputPos[0] = x * low + pos[0];
-						outputPos[0] = x * high + pos[0];
+						inputPosition[1] = y * low + voxPos[1];
+						outputPosition[1] = y * high + voxPos[1];
 
-						for (int y = -5; y <= 5; y++)
+						for (int z = -5; z <= 5; z++)
 						{
-							inputPos[1] = y * low + pos[1];
-							outputPos[1] = y * high + pos[1];
+							inputPosition[2] = z * low + voxPos[2];
+							outputPosition[2] = z * high + voxPos[2];
 
-							for (int z = -5; z <= 5; z++)
-							{
-								inputPos[2] = z * low + pos[2];
-								outputPos[2] = z * high + pos[2];
-
-								if (x != 0 || y != 0 || z != 0)
-								{
-									inputs[inputCpt] = (scenes[sceneIndex]->readPoint(inputPos, colorHolder, 7) ? 1 : 0);
-									inputCpt++;
-								}
-
-								if (x >= 0 && y >= 0 && z >= 0 && x < 2 && y < 2 && z < 2)
-								{
-									expectedOutputs[outputCpt] = (scenes[sceneIndex + 1]->readPoint(outputPos, colorHolder, 8) ? 1 : 0);
-									outputCpt++;
-								}
-							}
+							inputs[inputCpt] = (scenes[renderScene]->readPoint(inputPosition, colorHolder, 7) ? 1 : 0);
+							inputCpt++;
 						}
 					}
+				}
 
-					network->compute(inputs, networkOutputs);
+				network->compute(inputs, networkOutputs);
 
-					for (int i = 0; i < 8; i++)
+				int i = 0;
+				for (int x = 0; x <= 1; x++)
+				{
+					outputPosition[0] = x * high + voxPos[0];
+
+					for (int y = 0; y <= 1; y++)
 					{
-						if ((networkOutputs[i] >= 1 && expectedOutputs[i] == 1) || (networkOutputs[i] < 0 && expectedOutputs[i] == 0))
+						outputPosition[1] = y * high + voxPos[1];
+
+						for (int z = 0; z <= 1; z++)
 						{
-							good += 1;
-						}
-						else {
-							error++;							
+							outputPosition[2] = z * high + voxPos[2];
+
+							if (networkOutputs[i] >= 1)
+							{
+								colorHolder = glm::vec3(0.8, 0.8, 0.8);
+								scenes[scenes.size() - 1]->addPoint(outputPosition, colorHolder);
+							}
+
+							i++;
 						}
 					}
 				}
 			}
 		}
-
-		//Single isolated voxel test
-		//for (int i = 0; i < inputs.size(); i++)
-		//{
-		//	inputs[i] = 0;
-		//}
-
-		//inputs[13] = 0;
-
-		//network->compute(inputs, networkOutputs);
-
-		//for (int i = 0; i < 8; i++)
-		//{
-		//	if (networkOutputs[i] >= 1 && expectedOutputs[i] == 1)
-		//	{
-		//		good++;
-		//	}
-		//	else {
-		//		error++;
-		//	}
-		//}
 	}
 
-	if (error == 0)
-	{
-		validated = true;
-	}
-
-	return good;
+	scenes[scenes.size() - 1]->simplify();
+	scenes[scenes.size() - 1]->addPointLight(glm::vec3(3.5, 4, 0));
 }
