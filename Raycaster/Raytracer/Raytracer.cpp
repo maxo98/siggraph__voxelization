@@ -16,11 +16,11 @@
 #define MULTITHREAD
 
 bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo, 
-	const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs);
+	const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs);
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& esHyper, bool& validated, std::vector<VoxelScene*>& scenes, 
-	const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs, std::atomic<bool>* ticket = nullptr);
-int sceneTest(NeuralNetwork* network, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<float>>& inputs, 
-	const std::vector<std::vector<float>>& expectedOutputs);
+	const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs, std::atomic<bool>* ticket = nullptr);
+int sceneTest(NeuralNetwork* network, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<bool>>& inputs,
+	const std::vector<std::vector<bool>>& expectedOutputs);
 
 void applyResult(NeuralNetwork* network, std::vector<VoxelScene*>& scenes, int renderScene);
 
@@ -69,14 +69,14 @@ int main(int argc, char *argv[])
 
 	Window window("Raycaster V1.0", windowWidth, windowHeight);
 
-	int renderScene = 2;// 4;
+	int renderScene = 0;// 4;
 	std::vector<VoxelScene*> scenes;
 	scenes.reserve(8);
 
 	scenes.push_back(new VoxelScene(7));
 	scenes.push_back(new VoxelScene(8));
-	scenes.push_back(new VoxelScene(7));
-	scenes.push_back(new VoxelScene(8));
+	//scenes.push_back(new VoxelScene(7));
+	//scenes.push_back(new VoxelScene(8));
 	//scenes.push_back(new VoxelScene(7));
 	//scenes.push_back(new VoxelScene(8));
 	//scenes.push_back(new VoxelScene(7));
@@ -109,11 +109,11 @@ int main(int argc, char *argv[])
 	//scenes[6]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
 	//scenes[7]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
-	scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
-	scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
+	//scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
+	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
-	scenes[2]->loadModel(glm::dvec3(3, 2.01, 3), "Sphere7.txt");
-	scenes[3]->loadModel(glm::dvec3(3, 2.01, 3), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Sphere7.txt");
+	scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -270,8 +270,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	std::vector<std::vector<float>> inputs;
-	std::vector<std::vector<float>> expectedOutputs;
+	std::vector<std::vector<bool>> inputs;
+	std::vector<std::vector<bool>> expectedOutputs;
 
 	const double high = 0.00390625;
 	const double low = 0.0078125;
@@ -289,9 +289,9 @@ int main(int argc, char *argv[])
 			{
 				for (position[2] = scenes[sceneIndex]->min[2] - low; position[2] <= (scenes[sceneIndex]->max[2] + low); position[2] += low)
 				{
-					inputs.push_back(std::vector<float>());
+					inputs.push_back(std::vector<bool>());
 					inputs.back().resize(11 * 11 * 11 - 1);
-					expectedOutputs.push_back(std::vector<float>());
+					expectedOutputs.push_back(std::vector<bool>());
 					expectedOutputs.back().resize(8);
 
 					int inputCpt = 0;
@@ -314,13 +314,13 @@ int main(int argc, char *argv[])
 
 								if (x != 0 || y != 0 || z != 0)
 								{
-									inputs.back()[inputCpt] = (scenes[sceneIndex]->readPoint(inputPosition, colorHolder, 7) ? 1 : 0);
+									inputs.back()[inputCpt] = scenes[sceneIndex]->readPoint(inputPosition, colorHolder, 7);
 									inputCpt++;
 								}
 
 								if (x >= 0 && y >= 0 && z >= 0 && x < 2 && y < 2 && z < 2)
 								{
-									expectedOutputs.back()[outputCpt] = (scenes[sceneIndex + 1]->readPoint(outputPosition, colorHolder, 8) ? 1 : 0);
+									expectedOutputs.back()[outputCpt] = scenes[sceneIndex + 1]->readPoint(outputPosition, colorHolder, 8);
 									outputCpt++;
 								}
 							}
@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo, const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs)
+bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo, const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs)
 {
 	std::vector<float> fitness;
 
@@ -549,7 +549,7 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 20 && validated == false; i3++)
+	for (int i3 = 0; i3 < 1 && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
@@ -627,7 +627,7 @@ bool hypeneatTest(int popSize, std::vector<VoxelScene*>& scenes, Hyperneat& algo
 }
 
 
-void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& algo, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs, std::atomic<bool>* ticket)
+void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat& algo, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs, std::atomic<bool>* ticket)
 {
 	for (int i = startIndex; i < (startIndex + currentWorkload); i++)
 	{
@@ -648,20 +648,27 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 	}
 }
 
-int sceneTest(NeuralNetwork* network, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<float>>& inputs, const std::vector<std::vector<float>>& expectedOutputs)
+int sceneTest(NeuralNetwork* network, bool& validated, std::vector<VoxelScene*>& scenes, const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs)
 {
 	int good = 0;
 	int error = 0;
 
+	std::vector<float> inputsFloat;
+	inputsFloat.resize(inputs[0].size());
 	std::vector<float> networkOutputs;
 
 	for (int cpt = 0; cpt < inputs.size(); cpt++)
 	{
-		network->compute(inputs[cpt], networkOutputs);
+		for (int i = 0; i < inputsFloat.size(); i++)
+		{
+			inputsFloat[i] = (inputs[cpt][i] == true ? 1.f : 0.f);
+		}
+
+		network->compute(inputsFloat, networkOutputs);
 
 		for (int i = 0; i < 8; i++)
 		{
-			if ((networkOutputs[i] >= 1 && expectedOutputs[cpt][i] == 1) || (networkOutputs[i] < 0 && expectedOutputs[cpt][i] == 0))
+			if ((networkOutputs[i] >= 1 && expectedOutputs[cpt][i] == true) || (networkOutputs[i] < 0 && expectedOutputs[cpt][i] == false))
 			{
 				good += 1;
 			}
