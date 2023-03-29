@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include <mutex>
 #include "Utils.h"
+#include "Hyperneat.h"
 
 #define MAP_WIDTH 20
 #define MAP_HEIGHT 20
@@ -39,7 +40,8 @@ public:
 	void simplifyOctree(Octree<glm::vec3>* tree);
 	bool loadModel(glm::dvec3 pos, std::string file);
 	
-	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, std::atomic<bool>* ticket = nullptr);
+	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, 
+		float octSize, int radius, Hyperneat* hyperneat = nullptr, Genome* gen = nullptr, std::atomic<bool>* ticket = nullptr);
 
 	//Octree traveral
 	uint8_t firstNode(glm::dvec3 t0, glm::dvec3 tm, float& t);
@@ -51,6 +53,8 @@ public:
 		float lvl, uint8_t a, Octree<glm::vec3>** octreeHit, glm::vec3& normal, float& t, bool& hitOnEnter);
 
 	inline void setLevels(uint8_t newLvl) { levels = newLvl; };
+
+	bool generateData(int x, int y, Camera& camera, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, std::vector<std::vector<bool>>& inputs, float octSize, int radius);
 
 	glm::vec3 min, max;
 
@@ -66,8 +70,6 @@ private:
 	//float topLevelSize = 1; Assuming this will always be 1 simplifies things a little
 
 	glm::vec3 lightColor = glm::vec3(1.2, 1.2, 1.2);
-
-
 
 	//glm::vec3 gridOffset = glm::vec3(10, 10, 10);
 };

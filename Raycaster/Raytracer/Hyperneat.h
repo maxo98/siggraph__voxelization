@@ -62,10 +62,18 @@ public:
 	void clear();
 
 	void generateNetworks();
-	void generateNetworksThread(int startIndex, int worlkload, std::atomic<bool>* ticket = nullptr);
+	void generateNetworks(std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate,
+		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
+	void generateNetworksThread(int startIndex, int worlkload, std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate,
+		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates, std::atomic<bool>* ticket = nullptr);
 	void genomeToNetwork(Genome& gen, NeuralNetwork& net);
-	virtual void createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net);
+	void genomeToNetwork(Genome& gen, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
+	virtual void createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
 	void initNetworks();
+	void initNetworks(std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate, 
+		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
 
 	//Only compute backprop over connections of output nodes
 	bool backprop(const std::vector<float>& inputs, const std::vector<float>& outputs, float learnRate);
@@ -74,7 +82,8 @@ public:
 	inline NeuralNetwork* getNeuralNetwork(int i) { return &networks[i]; };
 
 protected:
-	virtual void initNetwork(NeuralNetwork& net);
+	virtual void initNetwork(NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
 
 	/**
 	* Connect layer to the previous layer

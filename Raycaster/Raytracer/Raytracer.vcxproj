@@ -53,6 +53,7 @@
     <ClInclude Include="Node.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Species.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="VoxelScene.h" />

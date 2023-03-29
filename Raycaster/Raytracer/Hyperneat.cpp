@@ -72,12 +72,20 @@ void Hyperneat::clear()
 
 void Hyperneat::generateNetworks()
 {
+	generateNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrates);
+}
+
+void Hyperneat::generateNetworks(std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate,
+	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
+{
+	networks.resize(cppns->getPopSize());
+	
 	int threads = 1;
 	ThreadPool* pool = ThreadPool::getInstance();
 	size_t taskLaunched = pool->getTasksTotal();
 	unsigned int cpus = (pool->getThreadPoolSize() >= taskLaunched ? pool->getThreadPoolSize() - taskLaunched : 0);
 
-	float totalWorkload = networks.size();
+	float totalWorkload = cppns->getPopSize();
 	float workload = (cpus > 1 ? totalWorkload / cpus : totalWorkload);
 	float restWorkload = 0;
 	int currentWorkload = totalWorkload;
@@ -110,7 +118,8 @@ void Hyperneat::generateNetworks()
 		restWorkload = workloadFrac;
 
 		tickets.emplace_back(false);
-		pool->queueJob(&Hyperneat::generateNetworksThread, this, startIndex, currentWorkload + floor(restWorkload), &tickets.back());
+		pool->queueJob(&Hyperneat::generateNetworksThread, this, startIndex, currentWorkload + floor(restWorkload), std::ref(networks),
+			std::ref(inputSubstrate), std::ref(outputSubstrate), std::ref(hiddenSubstrates), &tickets.back());
 		++threads;
 
 		count += currentWorkload + floor(restWorkload);
@@ -125,7 +134,7 @@ void Hyperneat::generateNetworks()
 
 	count += currentWorkload;
 
-	generateNetworksThread(startIndex, currentWorkload);
+	generateNetworksThread(startIndex, currentWorkload, networks, inputSubstrate, outputSubstrate, hiddenSubstrates);
 
 	for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
 	{
@@ -133,11 +142,12 @@ void Hyperneat::generateNetworks()
 	}
 }
 
-void Hyperneat::generateNetworksThread(int startIndex, int worlkload, std::atomic<bool>* ticket)
+void Hyperneat::generateNetworksThread(int startIndex, int worlkload, std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate,
+	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates, std::atomic<bool>* ticket)
 {
 	for (unsigned int cpt = startIndex; cpt < (startIndex + worlkload); cpt++)
 	{
-		createNetwork(*cppns->getNeuralNetwork(cpt), networks[cpt]);
+		createNetwork(*cppns->getNeuralNetwork(cpt), networks[cpt], inputSubstrate, outputSubstrate, hiddenSubstrates);
 	}
 
 	if (ticket != nullptr)
@@ -149,21 +159,34 @@ void Hyperneat::generateNetworksThread(int startIndex, int worlkload, std::atomi
 
 void Hyperneat::genomeToNetwork(Genome& gen, NeuralNetwork& net)
 {
+	genomeToNetwork(gen, net, inputSubstrate, outputSubstrate, hiddenSubstrates);
+}
+
+void Hyperneat::genomeToNetwork(Genome& gen, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
+{
 	NeuralNetwork hyperNet;
 	cppns->genomeToNetwork(gen, hyperNet);
-	initNetwork(net);
-	createNetwork(hyperNet, net);
+	initNetwork(net, inputSubstrate, outputSubstrate, hiddenSubstrates);
+	createNetwork(hyperNet, net, inputSubstrate, outputSubstrate, hiddenSubstrates);
 }
 
 void Hyperneat::initNetworks()
 {
+	initNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrates);
+}
+
+void Hyperneat::initNetworks(std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate,
+	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
+{
 	for (int i = 0; i < networks.size(); i++)
 	{
-		initNetwork(networks[i]);
+		initNetwork(networks[i], inputSubstrate, outputSubstrate, hiddenSubstrates);
 	}
 }
 
-void Hyperneat::initNetwork(NeuralNetwork& net)
+void Hyperneat::initNetwork(NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
 {
 	//Add the input layer
 	net.addMultipleInputNode(inputSubstrate.size());
@@ -177,7 +200,8 @@ void Hyperneat::initNetwork(NeuralNetwork& net)
 	net.addOutputNode(outputSubstrate.size(), hyperParam.activationFunction);
 }
 
-void Hyperneat::createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net)
+void Hyperneat::createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
 {
 	net.clearConnections();
 
@@ -296,7 +320,7 @@ bool Hyperneat::backprop(const std::vector<float>& inputs, const std::vector<flo
 			}
 		}
 
-		createNetwork(*cppns->getNeuralNetwork(i), networks[i]);
+		createNetwork(*cppns->getNeuralNetwork(i), networks[i], inputSubstrate, outputSubstrate, hiddenSubstrates);
 	}
 
 	return true;

@@ -114,6 +114,8 @@ public:
 	//Taken from official implementation, no idea how it works
 	float gaussRand();
 
+	inline int getPopSize() { return populationSize; };
+
 protected:
 	std::vector<NeuralNetwork> networks;
 	Genome* genomes = nullptr, *futureGen = nullptr;

@@ -524,7 +524,8 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::vec3& rayDir, const glm::vec
 	return hit;
 }
 
-void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, std::atomic<bool>* ticket)
+void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, 
+	float octSize, int radius, Hyperneat* hyperneat, Genome* gen, std::atomic<bool>* ticket)
 {
 	for (int i = 0; i < workload; i++)
 	{
@@ -543,7 +544,66 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 		{
 			color = *octreeHit->object;
 
-			bool hitByLight = false;
+			if (hyperneat != nullptr)
+			{
+				std::vector<float> inputs;
+				std::vector<float> outputs;
+				glm::dvec3 posRef(floor(hitPos.x / octSize) * octSize, floor(hitPos.y / octSize) * octSize, floor(hitPos.z / octSize) * octSize);
+				glm::vec3 colorHolder;
+				glm::dvec3 readPos;
+				glm::dvec3 inputNetwork;
+
+				std::vector<std::vector<std::vector<float>>> inputsPos;
+
+				for (int axis = 0; axis < 3; axis++)
+				{
+					inputsPos.push_back(std::vector<std::vector<float>>());
+				}
+
+				for (int x = -radius; x <= radius; x++)
+				{
+					readPos.x = hitPos.x + radius * octSize;
+					inputNetwork.x = posRef.x + radius * octSize - hitPos.x;
+
+					for (int y = -radius; y <= radius; y++)
+					{
+						readPos.y = hitPos.y + radius * octSize;
+						inputNetwork.y = posRef.y + radius * octSize - hitPos.y;
+
+						for (int z = -radius; z <= radius; z++)
+						{
+							readPos.z = hitPos.z + radius * octSize;
+							inputNetwork.z = posRef.z + radius * octSize - hitPos.z;
+
+							for (int axis = 0; axis < 3; axis++)
+							{
+								inputsPos[axis].push_back(std::vector<float>());
+								inputsPos[axis].back().push_back(inputNetwork[axis]);
+							}
+
+							inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
+						}
+					}
+				}
+
+				NeuralNetwork network;
+
+				std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
+				std::vector<std::vector<float>> outputSubstrate;
+				outputSubstrate.push_back(std::vector<float>());
+				outputSubstrate[0].push_back(0);
+
+				for (int axis = 0; axis < 3; axis++)
+				{
+					hyperneat->genomeToNetwork(*gen, network, inputsPos[axis], outputSubstrate, hiddenSubstrate);
+					network.compute(inputs, outputs);
+					normal[axis] = outputs[0];
+				}
+
+				normal = glm::normalize(normal);
+			}
+
+			bool hitByLight = true;/////////////////////////////////////////////////
 
 			float mDist = -glm::dot(-normal, hitPos);
 
@@ -610,6 +670,65 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 		(*ticket) = true;
 		ticket->notify_one();
 	}
+}
+
+bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, std::vector<std::vector<bool>>& inputs, float octSize, int radius)
+{
+	//Compute position and direction of a ray
+	float xx = (2.f * ((x + 0.5f) * camera.wdithStep) - 1.f) * camera.angle * camera.aspectratio;
+	float yy = (1.f - 2.f * ((y + 0.5f) * camera.heightStep)) * camera.angle;
+
+	glm::vec3 rayDir = glm::normalize(camera.camRot * glm::vec3(xx, yy, 1.f));
+
+	glm::vec3 color;
+	Octree<glm::vec3>* octreeHit = nullptr;
+	glm::vec3 hitPos;
+	glm::vec3 normal;
+
+	if (traceRay(worldMap, rayDir, camera.pos, &octreeHit, hitPos, normal) == true)
+	{
+		inputsPos.push_back(std::vector<std::vector<std::vector<float>>>());
+		inputsPos.back().push_back(std::vector<std::vector<float>>());
+		inputsPos.back().push_back(std::vector<std::vector<float>>());
+		inputsPos.back().push_back(std::vector<std::vector<float>>());
+
+		inputs.push_back(std::vector<bool>());
+
+		glm::dvec3 posRef(floor(hitPos.x / octSize) * octSize, floor(hitPos.y / octSize) * octSize, floor(hitPos.z / octSize) * octSize);
+		glm::vec3 colorHolder;
+		glm::dvec3 readPos;
+		glm::dvec3 inputNetwork;
+
+		for (int x = -radius; x <= radius; x++)
+		{
+			readPos.x = hitPos.x + radius * octSize;
+			inputNetwork.x = posRef.x + radius * octSize - hitPos.x;
+
+			for (int y = -radius; y <= radius; y++)
+			{
+				readPos.y = hitPos.y + radius * octSize;
+				inputNetwork.y = posRef.y + radius * octSize - hitPos.y;
+
+				for (int z = -radius; z <= radius; z++)
+				{
+					readPos.z = hitPos.z + radius * octSize;
+					inputNetwork.z = posRef.z + radius * octSize - hitPos.z;
+
+					for (int axis = 0; axis < 3; axis++)
+					{
+						inputsPos.back()[axis].push_back(std::vector<float>());
+						inputsPos.back()[axis].back().push_back(inputNetwork[axis]);
+					}
+
+					inputs.back().push_back(readPoint(readPos, colorHolder, levels));
+				}
+			}
+		}
+
+		return true;
+	}
+
+	return false;
 }
 
 bool VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
