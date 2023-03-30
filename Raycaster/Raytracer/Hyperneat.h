@@ -69,6 +69,8 @@ public:
 	void genomeToNetwork(Genome& gen, NeuralNetwork& net);
 	void genomeToNetwork(Genome& gen, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
 		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
+	void createNetwork(int cppnIndex, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
 	virtual void createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
 		std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates);
 	void initNetworks();

@@ -200,6 +200,12 @@ void Hyperneat::initNetwork(NeuralNetwork& net, std::vector<std::vector<float>>&
 	net.addOutputNode(outputSubstrate.size(), hyperParam.activationFunction);
 }
 
+void Hyperneat::createNetwork(int cppnIndex, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
+{
+	createNetwork(*cppns->getNeuralNetwork(cppnIndex), net, inputSubstrate, outputSubstrate, hiddenSubstrates);
+}
+
 void Hyperneat::createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
 	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
 {

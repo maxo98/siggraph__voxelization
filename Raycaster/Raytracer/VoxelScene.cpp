@@ -560,20 +560,22 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 					inputsPos.push_back(std::vector<std::vector<float>>());
 				}
 
-				for (int x = -radius; x <= radius; x++)
+				float maxDist = (radius + 1) * octSize;
+
+				for (float x = -radius; x <= radius; x++)
 				{
-					readPos.x = hitPos.x + radius * octSize;
-					inputNetwork.x = posRef.x + radius * octSize - hitPos.x;
+					readPos.x = hitPos.x + x * octSize;
+					inputNetwork.x = 1 - abs(posRef.x + x * octSize - hitPos.x) / maxDist;
 
-					for (int y = -radius; y <= radius; y++)
+					for (float y = -radius; y <= radius; y++)
 					{
-						readPos.y = hitPos.y + radius * octSize;
-						inputNetwork.y = posRef.y + radius * octSize - hitPos.y;
+						readPos.y = hitPos.y + y * octSize;
+						inputNetwork.y = 1 - abs(posRef.y + y * octSize - hitPos.y) / maxDist;
 
-						for (int z = -radius; z <= radius; z++)
+						for (float z = -radius; z <= radius; z++)
 						{
-							readPos.z = hitPos.z + radius * octSize;
-							inputNetwork.z = posRef.z + radius * octSize - hitPos.z;
+							readPos.z = hitPos.z + z * octSize;
+							inputNetwork.z = 1 - abs(posRef.z + z * octSize - hitPos.z) / maxDist;
 
 							for (int axis = 0; axis < 3; axis++)
 							{
@@ -586,8 +588,6 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 					}
 				}
 
-				NeuralNetwork network;
-
 				std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 				std::vector<std::vector<float>> outputSubstrate;
 				outputSubstrate.push_back(std::vector<float>());
@@ -595,6 +595,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 
 				for (int axis = 0; axis < 3; axis++)
 				{
+					NeuralNetwork network;
 					hyperneat->genomeToNetwork(*gen, network, inputsPos[axis], outputSubstrate, hiddenSubstrate);
 					network.compute(inputs, outputs);
 					normal[axis] = outputs[0];
@@ -605,46 +606,47 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 
 			bool hitByLight = true;/////////////////////////////////////////////////
 
-			float mDist = -glm::dot(-normal, hitPos);
+			//float mDist = -glm::dot(-normal, hitPos);
 
-			for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
-			{
-				//Check if the on which side of the plane the light is
-				if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
-				{
-					glm::vec3 filler, filler2;
-					Octree<glm::vec3>* oHitLight = nullptr;
+			//for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
+			//{
+			//	//Check if the on which side of the plane the light is
+			//	if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
+			//	{
+			//		glm::vec3 filler, filler2;
+			//		Octree<glm::vec3>* oHitLight = nullptr;
 
-					rayDir = glm::normalize(hitPos - glm::vec3(pointLights[i]));
+			//		rayDir = glm::normalize(hitPos - glm::vec3(pointLights[i]));
 
-					traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
+			//		traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
 
-					if (octreeHit == oHitLight)
-					{
-						hitByLight = true;
+			//		if (octreeHit == oHitLight)
+			//		{
+			//			hitByLight = true;
 
-						float ambientStrength = 0.00f;
-						glm::vec3 ambient = lightColor * ambientStrength;
-						// diffuse 
-						//normal = -normal;
-						glm::vec3 lightDir = glm::normalize(pointLights[i] - hitPos);
-						float diff = std::max(glm::dot(normal, lightDir), 0.f);
-						glm::vec3 diffuse = lightColor * diff;
-						// specular
-						float specularStrength = 0.15;
-						glm::vec3 viewDir = glm::normalize(camera.pos - hitPos);
-						glm::vec3 reflectDir = reflect(-lightDir, normal);
-						float spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
-						glm::vec3 specular = lightColor * specularStrength * spec;
-						glm::vec3 result = (ambient + diffuse) * color + specular;
+			//			float ambientStrength = 0.00f;
+			//			glm::vec3 ambient = lightColor * ambientStrength;
+			//			// diffuse 
+			//			//normal = -normal;
+			//			glm::vec3 lightDir = glm::normalize(pointLights[i] - hitPos);
+			//			float diff = std::max(glm::dot(normal, lightDir), 0.f);
+			//			glm::vec3 diffuse = lightColor * diff;
+			//			// specular
+			//			float specularStrength = 0.15;
+			//			glm::vec3 viewDir = glm::normalize(camera.pos - hitPos);
+			//			glm::vec3 reflectDir = reflect(-lightDir, normal);
+			//			float spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
+			//			glm::vec3 specular = lightColor * specularStrength * spec;
+			//			glm::vec3 result = (ambient + diffuse) * color + specular;
 
-						buffer[x][y] = glm::min(result, glm::vec3(1.f));
-						//buffer[x][y] = abs(normal);
-						//buffer[x][y] = color;
-					}
-				}
-				
-			}
+			//			buffer[x][y] = glm::min(result, glm::vec3(1.f));
+			//			//buffer[x][y] = abs(normal);
+			//			//buffer[x][y] = color;
+			//		}
+			//	}
+			//}
+
+			buffer[x][y] = abs(normal);
 
 			if (hitByLight == false)
 			{
@@ -699,20 +701,22 @@ bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vec
 		glm::dvec3 readPos;
 		glm::dvec3 inputNetwork;
 
-		for (int x = -radius; x <= radius; x++)
+		float maxDist = (radius + 1) * octSize;
+
+		for (float x = -radius; x <= radius; x++)
 		{
-			readPos.x = hitPos.x + radius * octSize;
-			inputNetwork.x = posRef.x + radius * octSize - hitPos.x;
+			readPos.x = hitPos.x + x * octSize;
+			inputNetwork.x = 1 - abs(posRef.x + x * octSize - hitPos.x) / maxDist;
 
-			for (int y = -radius; y <= radius; y++)
+			for (float y = -radius; y <= radius; y++)
 			{
-				readPos.y = hitPos.y + radius * octSize;
-				inputNetwork.y = posRef.y + radius * octSize - hitPos.y;
+				readPos.y = hitPos.y + y * octSize;
+				inputNetwork.y = 1 - abs(posRef.y + y * octSize - hitPos.y) / maxDist;
 
-				for (int z = -radius; z <= radius; z++)
+				for (float z = -radius; z <= radius; z++)
 				{
-					readPos.z = hitPos.z + radius * octSize;
-					inputNetwork.z = posRef.z + radius * octSize - hitPos.z;
+					readPos.z = hitPos.z + z * octSize;
+					inputNetwork.z = 1 - abs(posRef.z + z * octSize - hitPos.z) / maxDist;
 
 					for (int axis = 0; axis < 3; axis++)
 					{
