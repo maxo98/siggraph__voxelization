@@ -15,19 +15,19 @@
 
 #define MULTITHREAD
 
-#define DIAMETER 5
-#define RADIUS 2
+#define DIAMETER 7
+#define RADIUS 3
 
 bool hypeneatTest(int popSize, Hyperneat* algo, 
 	const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs);
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, bool& validated,
 	const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs, std::atomic<bool>* ticket = nullptr);
-int sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::vector<bool>>& inputs,
+float sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::vector<bool>>& inputs,
 	const std::vector<std::vector<bool>>& expectedOutputs);
 
 void applyResult(NeuralNetwork* network, std::vector<VoxelScene*>& scenes, int renderScene);
 
-//#define LOAD
+#define LOAD
 
 std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
 
 	//scene.addPointLight(glm::vec3(1.75, 3, 0));
 	scenes[renderScene]->addPointLight(glm::vec3(3.5, 4, 0));
+	scenes[1]->addPointLight(glm::vec3(3.5, 4, 0));
 
 	//Spaceship
 	//2.18164 2.135 2.43359
@@ -151,14 +152,14 @@ int main(int argc, char *argv[])
 	neatparam.pbToggleLink = 0.005;// 0.05;
 	//neatparam.weightShiftStrength = 2.5;
 	//neatparam.weightRandomStrength = 2.5;
-	neatparam.weightMuteStrength = 1.5;// 2.5;
+	neatparam.weightMuteStrength = 50;// 2.5;
 	neatparam.pbMutateActivation = 0.7;
 
 	neatparam.disjointCoeff = 1.0;
 	neatparam.excessCoeff = 1.0;
 	neatparam.mutDiffCoeff = 0.4;
 	neatparam.activationDiffCoeff = 1.0;
-	neatparam.weightCoeff = 0;
+	neatparam.weightCoeff = 0.1;
 
 	neatparam.killRate = 0.2;
 
@@ -190,8 +191,8 @@ int main(int argc, char *argv[])
 	HyperneatParameters hyperneatParam;
 
 	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput = 7;// 2;
-	hyperneatParam.cppnInputFunction = biasCppnInput;// upscaleCppnInput;
+	hyperneatParam.cppnInput = 2;
+	hyperneatParam.cppnInputFunction = upscaleCppnInput;
 	hyperneatParam.cppnOutput = 1;
 	hyperneatParam.nDimensions = 3;
 	hyperneatParam.thresholdFunction = noThreshold;
@@ -208,7 +209,7 @@ int main(int argc, char *argv[])
 
 	int count = 0;
 
-	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::FULL);
+	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::ONE);
 
 	//Set node location
 	//Have 8 output for the 8 possibles voxel positions
@@ -278,6 +279,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+#ifndef LOAD
 
 	std::vector<std::vector<bool>> inputs;
 	std::vector<std::vector<bool>> expectedOutputs;
@@ -357,7 +360,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-#ifndef LOAD
 	hyper.initNetworks();
 
 	hyper.generateNetworks();
@@ -384,7 +386,7 @@ int main(int argc, char *argv[])
 	hyper.genomeToNetwork(gen, network);
 #endif // !LOAD
 
-	applyResult(&network, scenes, renderScene);
+	//applyResult(&network, scenes, renderScene);
 
 	//Rendering
 	//Window window("Raycaster V1.0", windowWidth, windowHeight);
@@ -493,7 +495,7 @@ int main(int argc, char *argv[])
 					restWorkload = workloadFrac;
 
 					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[scenes.size() - 1], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
+					pool->queueJob(&VoxelScene::drawPixels, scenes[1], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), &tickets.back());
 					++threads;
 
 					x += currentWorkload / windowHeight;
@@ -527,7 +529,7 @@ int main(int argc, char *argv[])
 					count--;
 				}
 
-				scenes[scenes.size() - 1]->drawPixels(currentWorkload, x, y, window, cam, buffer);
+				scenes[1]->drawPixels(currentWorkload, x, y, window, cam, buffer);
 
 				timer = SDL_GetTicks();
 
@@ -573,7 +575,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, const std::vector<std::vector<bo
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 50 && validated == false; i3++)
+	for (int i3 = 0; i3 < 5 && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
@@ -672,9 +674,9 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 	}
 }
 
-int sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs)
+float sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs)
 {
-	int good = 0;
+	float good = 0;
 	int error = 0;
 
 	std::vector<float> inputsFloat;
@@ -692,13 +694,22 @@ int sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::ve
 
 		for (int i = 0; i < 8; i++)
 		{
-			if ((networkOutputs[i] >= 1 && expectedOutputs[cpt][i] == true) || (networkOutputs[i] < 0 && expectedOutputs[cpt][i] == false))
+			if ((networkOutputs[i] >= 1))
 			{
 				good += 1;
 			}
-			else {
-				error++;
-			}
+
+			//if ((networkOutputs[i] >= 1 && expectedOutputs[cpt][i] == true))
+			//{
+			//	good += 1;
+			//}
+			//else if ((networkOutputs[i] < 1 && expectedOutputs[cpt][i] == false))
+			//{
+			//	good += 0.25;
+			//}
+			//else {
+			//	error++;
+			//}
 		}
 	}
 
@@ -727,10 +738,10 @@ int sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::ve
 
 	if (error == 0)
 	{
-		validated = true;
+		//validated = true;
 	}
 
-	return good;
+	return good / 100;
 }
 
 void applyResult(NeuralNetwork* network, std::vector<VoxelScene*>& scenes, int renderScene)
