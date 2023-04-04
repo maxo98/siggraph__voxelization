@@ -149,14 +149,14 @@ int main(int argc, char *argv[])
 	neatparam.pbToggleLink = 0.005;// 0.05;
 	//neatparam.weightShiftStrength = 2.5;
 	//neatparam.weightRandomStrength = 2.5;
-	neatparam.weightMuteStrength = 1.5;// 2.5;
+	neatparam.weightMuteStrength = 5;// 2.5;
 	neatparam.pbMutateActivation = 0.7;
 
 	neatparam.disjointCoeff = 1.0;
 	neatparam.excessCoeff = 1.0;
 	neatparam.mutDiffCoeff = 0.4;
 	neatparam.activationDiffCoeff = 1.0;
-	neatparam.weightCoeff = 0;
+	neatparam.weightCoeff = 0.5;
 
 	neatparam.killRate = 0.2;
 
