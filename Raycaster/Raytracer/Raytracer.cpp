@@ -17,6 +17,7 @@
 
 #define DIAMETER 7
 #define RADIUS 3
+#define GEN 15
 
 bool hypeneatTest(int popSize, Hyperneat* algo, 
 	const std::vector<std::vector<bool>>& inputs, const std::vector<std::vector<bool>>& expectedOutputs);
@@ -27,7 +28,9 @@ float sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::
 
 void applyResult(NeuralNetwork* network, std::vector<VoxelScene*>& scenes, int renderScene);
 
-#define LOAD
+//#define LOAD
+
+const float MAX_DIST = (RADIUS + 0.5) * sqrt(2.0);
 
 std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -41,7 +44,7 @@ std::vector<float> upscaleCppnInput(std::vector<void*> variables, std::vector<fl
 
 	std::vector<float> p3;
 
-	p3.push_back((5.0 - sqrt(dist))/5.0);
+	p3.push_back((MAX_DIST - sqrt(dist))/ MAX_DIST);
 
 	p3.push_back(1);//Bias
 
@@ -152,7 +155,7 @@ int main(int argc, char *argv[])
 	neatparam.pbToggleLink = 0.005;// 0.05;
 	//neatparam.weightShiftStrength = 2.5;
 	//neatparam.weightRandomStrength = 2.5;
-	neatparam.weightMuteStrength = 50;// 2.5;
+	neatparam.weightMuteStrength = 3;// 2.5;
 	neatparam.pbMutateActivation = 0.7;
 
 	neatparam.disjointCoeff = 1.0;
@@ -575,7 +578,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, const std::vector<std::vector<bo
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 5 && validated == false; i3++)
+	for (int i3 = 0; i3 < GEN && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
@@ -694,22 +697,17 @@ float sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::
 
 		for (int i = 0; i < 8; i++)
 		{
-			if ((networkOutputs[i] >= 1))
+			if ((networkOutputs[i] >= 1 && expectedOutputs[cpt][i] == true))
 			{
 				good += 1;
 			}
-
-			//if ((networkOutputs[i] >= 1 && expectedOutputs[cpt][i] == true))
-			//{
-			//	good += 1;
-			//}
-			//else if ((networkOutputs[i] < 1 && expectedOutputs[cpt][i] == false))
-			//{
-			//	good += 0.25;
-			//}
-			//else {
-			//	error++;
-			//}
+			else if ((networkOutputs[i] < 1 && expectedOutputs[cpt][i] == false))
+			{
+				good += 0.25;
+			}
+			else {
+				error++;
+			}
 		}
 	}
 
@@ -741,7 +739,7 @@ float sceneTest(NeuralNetwork* network, bool& validated, const std::vector<std::
 		//validated = true;
 	}
 
-	return good / 100;
+	return good / 1000;
 }
 
 void applyResult(NeuralNetwork* network, std::vector<VoxelScene*>& scenes, int renderScene)
