@@ -17,8 +17,8 @@
 
 #define MULTITHREAD
 
-#define DIAMETER 3
-#define RADIUS 1
+#define DIAMETER 5
+#define RADIUS 2
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
@@ -452,7 +452,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 25 && validated == false; i3++)
+	for (int i3 = 0; i3 < 5 && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
