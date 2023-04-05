@@ -34,7 +34,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
-	p1.push_back(1.0f);
+	p1.push_back(0.5f);
 	return p1;
 }
 
@@ -149,14 +149,14 @@ int main(int argc, char *argv[])
 	neatparam.pbToggleLink = 0.005;// 0.05;
 	//neatparam.weightShiftStrength = 2.5;
 	//neatparam.weightRandomStrength = 2.5;
-	neatparam.weightMuteStrength = 5;// 2.5;
+	neatparam.weightMuteStrength = 1.5;// 2.5;
 	neatparam.pbMutateActivation = 0.7;
 
 	neatparam.disjointCoeff = 1.0;
 	neatparam.excessCoeff = 1.0;
 	neatparam.mutDiffCoeff = 0.4;
 	neatparam.activationDiffCoeff = 1.0;
-	neatparam.weightCoeff = 0.5;
+	neatparam.weightCoeff = 1;
 
 	neatparam.killRate = 0.2;
 
@@ -452,7 +452,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 2 && validated == false; i3++)
+	for (int i3 = 0; i3 < 25 && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
@@ -557,7 +557,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 	inputsFloat.resize(inputs[0].size());
 
-	float score = 4 * inputsPos.size();
+	float score = inputsPos.size();
 
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
@@ -585,11 +585,15 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 		//Do test
 		normal = glm::normalize(normal);
 
+		float square = 0;
+
 		for (int axis = 0; axis < 3; axis++)
 		{
-			score -= pow(normal[axis] - outputs[cpt][axis], 2);
+			square += pow(normal[axis] - outputs[cpt][axis], 2);
 		}
+
+		score -= sqrt(square);
 	}
 
-	return score;
+	return score / 2000.0;
 }
