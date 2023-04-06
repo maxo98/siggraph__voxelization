@@ -20,6 +20,8 @@
 #define DIAMETER 5
 #define RADIUS 2
 
+#define OCTSIZE 0.00390625
+
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
 
@@ -70,9 +72,9 @@ int main(int argc, char *argv[])
 
 	int renderScene = 0;// 4;
 	std::vector<VoxelScene*> scenes;
-	scenes.reserve(8);
+	//scenes.reserve(8);
 
-	scenes.push_back(new VoxelScene(7));
+	//scenes.push_back(new VoxelScene(7));
 	scenes.push_back(new VoxelScene(8));
 	//scenes.push_back(new VoxelScene(7));
 	//scenes.push_back(new VoxelScene(8));
@@ -111,8 +113,8 @@ int main(int argc, char *argv[])
 	//scenes[0]->loadModel(glm::dvec3(3, 2.01, 3), "Cube7.txt");
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
-	scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[1]->loadModel(glm::dvec3(3, 3, 5), "Sphere8.txt");
+	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -218,7 +220,7 @@ int main(int argc, char *argv[])
 		{
 			if (*(data + (x + w * y) * comp) != 0 || *(data + (x + w * y) * comp + 1) != 0 || *(data + (x + w * y) * comp + 2) != 0)
 			{
-				if (scenes[0]->generateData(x, y, cam, inputsPos, inputs, 0.0078125, RADIUS) == true)
+				if (scenes[0]->generateData(x, y, cam, inputsPos, inputs, OCTSIZE, RADIUS) == true)
 				{
 					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
 				}
@@ -254,7 +256,7 @@ int main(int argc, char *argv[])
 	//Save
 	hyper.saveHistory();
 
-	hyper.getGoat()->saveCurrentGenome();
+	
 #endif // !LOAD
 
 	//Apply to check result
@@ -371,7 +373,7 @@ int main(int argc, char *argv[])
 					restWorkload = workloadFrac;
 
 					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), 0.0078125, RADIUS, &hyper, genP, &tickets.back());
+					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyper, genP, &tickets.back());
 					++threads;
 
 					x += currentWorkload / windowHeight;
@@ -405,7 +407,7 @@ int main(int argc, char *argv[])
 					count--;
 				}
 
-				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, 0.0078125, RADIUS, &hyper, genP);
+				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &hyper, genP);
 
 				timer = SDL_GetTicks();
 
@@ -452,7 +454,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 5 && validated == false; i3++)
+	for (int i3 = 0; i3 < 40 && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
@@ -521,6 +523,8 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 		}
 
 		algo->setScore(fitness);
+
+		algo->getGoat()->saveCurrentGenome();
 
 		algo->evolve();
 	}

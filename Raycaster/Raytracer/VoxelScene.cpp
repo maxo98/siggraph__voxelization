@@ -674,7 +674,8 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 	}
 }
 
-bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, std::vector<std::vector<bool>>& inputs, float octSize, int radius)
+bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, 
+	std::vector<std::vector<bool>>& inputs, float octSize, int radius)
 {
 	//Compute position and direction of a ray
 	float xx = (2.f * ((x + 0.5f) * camera.wdithStep) - 1.f) * camera.angle * camera.aspectratio;
