@@ -17,10 +17,12 @@
 
 #define MULTITHREAD
 
-#define DIAMETER 5
-#define RADIUS 2
+#define DIAMETER 7
+#define RADIUS 3
 
 #define OCTSIZE 0.00390625
+
+#define GEN 15
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
@@ -143,8 +145,8 @@ int main(int argc, char *argv[])
 	neatparam.activationFunctions.push_back(new GaussianActivation());
 	neatparam.activationFunctions.push_back(new AbsActivation());
 
-	neatparam.pbMutateLink = 0.15;// 0.05;
-	neatparam.pbMutateNode = 0.1;//0.03;
+	neatparam.pbMutateLink = 0.05;// 0.05;
+	neatparam.pbMutateNode = 0.03;//0.03;
 	//neatparam.pbWeightShift = 0.7;
 	//neatparam.pbWeightRandom = 0.2;
 	neatparam.pbWeight = 0.9;// 0.9;
@@ -454,7 +456,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 	bool validated = false;
 
-	for (int i3 = 0; i3 < 40 && validated == false; i3++)
+	for (int i3 = 0; i3 < GEN && validated == false; i3++)
 	{
 		std::cout << std::endl << "gen " << i3 << std::endl;
 
