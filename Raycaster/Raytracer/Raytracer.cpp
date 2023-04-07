@@ -17,8 +17,8 @@
 
 #define MULTITHREAD
 
-#define DIAMETER 7
-#define RADIUS 3
+#define DIAMETER 5
+#define RADIUS 2
 
 #define OCTSIZE 0.00390625
 
@@ -216,21 +216,27 @@ int main(int argc, char *argv[])
 	int comp;
 	unsigned char* data = stbi_load("SphereFront.png", &w, &h, &comp, STBI_rgb_alpha);
 
+	int in = 0;
+	int out = 0;
+
 	for (int x = 0; x < windowWidth; x++)
 	{
 		for (int y = 0; y < windowHeight; y++)
 		{
 			if (*(data + (x + w * y) * comp) != 0 || *(data + (x + w * y) * comp + 1) != 0 || *(data + (x + w * y) * comp + 2) != 0)
 			{
-				if (scenes[0]->generateData(x, y, cam, inputsPos, inputs, OCTSIZE, RADIUS) == true)
+				if (scenes[0]->generateData(x, y, cam, inputsPos, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
-					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
+					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
+						*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
 				}
 			}
 		}
 	}
 
 	stbi_image_free(data);
+
+	std::cout << in << " - " << out << std::endl;
 
 #ifndef LOAD
 
