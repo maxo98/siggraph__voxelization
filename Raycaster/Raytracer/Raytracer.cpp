@@ -17,8 +17,7 @@
 
 #define MULTITHREAD
 
-#define DIAMETER 5
-#define RADIUS 2
+#define RADIUS 5
 
 #define OCTSIZE 0.00390625
 
@@ -37,7 +36,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
-	p1.push_back(0.5f);
+	//p1.push_back(0.5f);
 	return p1;
 }
 
@@ -115,7 +114,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 3, 4), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -142,7 +141,8 @@ int main(int argc, char *argv[])
 	neatparam.activationFunctions.push_back(new SigmoidActivation());
 	neatparam.activationFunctions.push_back(new SinActivation());
 	neatparam.activationFunctions.push_back(new GaussianActivation());
-	neatparam.activationFunctions.push_back(new AbsActivation());
+	neatparam.activationFunctions.push_back(new LinearActivation());
+	//neatparam.activationFunctions.push_back(new AbsActivation());
 
 	neatparam.pbMutateLink = 0.10;// 0.05;
 	neatparam.pbMutateNode = 0.06;//0.03;
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 	HyperneatParameters hyperneatParam;
 
 	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput = 2;
+	hyperneatParam.cppnInput = 1;
 	hyperneatParam.cppnInputFunction = normalEstimationCppnInput;
 	hyperneatParam.cppnOutput = 1;
 	hyperneatParam.nDimensions = 1;
@@ -220,18 +220,16 @@ int main(int argc, char *argv[])
 	{
 		for (int y = 0; y < windowHeight; y++)
 		{
-			if (*(data + (x + w * y) * comp) != 0 || *(data + (x + w * y) * comp + 1) != 0 || *(data + (x + w * y) * comp + 2) != 0)
+			if (*(data + (x + w * y) * comp) != 71 || *(data + (x + w * y) * comp + 1) != 71 || *(data + (x + w * y) * comp + 2) != 71)
 			{
 				if (scenes[0]->generateData(x, y, cam, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
-					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
-						*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
+					outputs.push_back(glm::normalize(glm::vec3(*(data + (x + w * y) * comp) / 255.0, *(data + (x + w * y) * comp + 1) / 255.0,
+						*(data + (x + w * y) * comp + 2) / 255.0)));
 				}
 			}
 		}
 	}
-
-	
 
 	std::cout << in << " - " << out << std::endl;
 
@@ -255,15 +253,15 @@ int main(int argc, char *argv[])
 
 	for (double x = -RADIUS; x <= RADIUS; x++)
 	{
-		inputNetwork.x = 1 - abs(x * OCTSIZE) / maxDist;
+		inputNetwork.x = (1 - abs(x * OCTSIZE) / maxDist) * (x < 0 ? -1 : 1);
 
 		for (double y = -RADIUS; y <= RADIUS; y++)
 		{
-			inputNetwork.y = 1 - abs(y * OCTSIZE) / maxDist;
+			inputNetwork.y = (1 - abs(y * OCTSIZE) / maxDist) * (y < 0 ? -1 : 1);
 
 			for (double z = -RADIUS; z <= RADIUS; z++)
 			{
-				inputNetwork.z = 1 - abs(z * OCTSIZE) / maxDist;
+				inputNetwork.z = (1 - abs(z * OCTSIZE) / maxDist) * (z < 0 ? -1 : 1);
 
 				for (int axis = 0; axis < 3; axis++)
 				{
@@ -273,6 +271,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+	//std::cout << glm::normalize(test) << std::endl;
 
 	//Axis/CPPNS
 	std::vector<std::vector<NeuralNetwork>> networks;
@@ -458,14 +458,7 @@ int main(int argc, char *argv[])
 				{
 					for (int y = 0; y < windowHeight; y++)
 					{
-						if (buffer[x][y] != glm::vec3(0.05, 0.05, 0.05))
-						{
-							window.setPixelColor(glm::vec2(x, y), glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
-								*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
-						}
-						else {
-							window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
-						}
+						window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
 					}
 				}
 
@@ -627,7 +620,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 		}
 
 		//Do test
-		normal = glm::normalize(normal);
+		normal = abs(glm::normalize(normal));
 
 		float square = 0;
 

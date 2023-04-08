@@ -565,17 +565,17 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				for (double x = -radius; x <= radius; x++)
 				{
 					readPos.x = hitPos.x + x * octSize;
-					inputNetwork.x = 1 - abs(posRef.x + x * octSize - hitPos.x) / maxDist;
+					inputNetwork.x = (1 - abs(x * octSize) / maxDist) * (x < 0 ? -1 : 1);
 
 					for (double y = -radius; y <= radius; y++)
 					{
 						readPos.y = hitPos.y + y * octSize;
-						inputNetwork.y = 1 - abs(posRef.y + y * octSize - hitPos.y) / maxDist;
+						inputNetwork.y = (1 - abs(y * octSize) / maxDist) * (y < 0 ? -1 : 1);
 
 						for (double z = -radius; z <= radius; z++)
 						{
 							readPos.z = hitPos.z + z * octSize;
-							inputNetwork.z = 1 - abs(posRef.z + z * octSize - hitPos.z) / maxDist;
+							inputNetwork.z = (1 - abs(z * octSize) / maxDist) * (z < 0 ? -1 : 1);
 
 							for (int axis = 0; axis < 3; axis++)
 							{
@@ -699,22 +699,30 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 
 		double maxDist = (radius + 1) * octSize;
 
+		glm::vec3 test(0);
+
 		for (double x = -radius; x <= radius; x++)
 		{
 			readPos.x = hitPos.x + x * octSize;
-			inputNetwork.x = 1 - abs(x * octSize) / maxDist;
+			inputNetwork.x = (1 - abs(x * octSize) / maxDist) * (x < 0 ? -1 : 1);
 
 			for (double y = -radius; y <= radius; y++)
 			{
 				readPos.y = hitPos.y + y * octSize;
-				inputNetwork.y = 1 - abs(y * octSize) / maxDist;
+				inputNetwork.y = (1 - abs(y * octSize) / maxDist) * (y < 0 ? -1 : 1);
 
 				for (double z = -radius; z <= radius; z++)
 				{
 					readPos.z = hitPos.z + z * octSize;
-					inputNetwork.z = 1 - abs(z * octSize) / maxDist;
+					inputNetwork.z = (1 - abs(z * octSize) / maxDist) * (z < 0 ? -1 : 1);
 
 					inputs.back().push_back(readPoint(readPos, colorHolder, levels));
+
+					if (inputs.back().back() == true)
+					{
+						test += inputNetwork;
+					}
+					
 
 					if (z == 0 && x == 0 && y == 0)
 					{
@@ -729,6 +737,8 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 				}
 			}
 		}
+
+		//std::cout << glm::normalize(test) << std::endl;
 
 		return true;
 	}
