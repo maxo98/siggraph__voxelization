@@ -655,7 +655,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 			
 		}
 		else {
-			buffer[x][y] = glm::dvec3(0.05, 0.05, 0.05);
+			buffer[x][y] = glm::vec3(0.05, 0.05, 0.05);
 		}
 
 		y++;
@@ -674,7 +674,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 	}
 }
 
-bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos,
+bool VoxelScene::generateData(int x, int y, Camera& camera,
 	std::vector<std::vector<bool>>& inputs, double octSize, int radius, int& in, int& out)
 {
 	//Compute position and direction of a ray
@@ -690,11 +690,6 @@ bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vec
 
 	if (traceRay(worldMap, rayDir, camera.pos, &octreeHit, hitPos, normal) == true)
 	{
-		inputsPos.push_back(std::vector<std::vector<std::vector<float>>>());
-		inputsPos.back().push_back(std::vector<std::vector<float>>());
-		inputsPos.back().push_back(std::vector<std::vector<float>>());
-		inputsPos.back().push_back(std::vector<std::vector<float>>());
-
 		inputs.push_back(std::vector<bool>());
 
 		glm::dvec3 posRef(floor(hitPos.x / octSize) * octSize, floor(hitPos.y / octSize) * octSize, floor(hitPos.z / octSize) * octSize);
@@ -707,23 +702,17 @@ bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vec
 		for (double x = -radius; x <= radius; x++)
 		{
 			readPos.x = hitPos.x + x * octSize;
-			inputNetwork.x = 1 - abs(posRef.x + x * octSize - hitPos.x) / maxDist;
+			inputNetwork.x = 1 - abs(x * octSize) / maxDist;
 
 			for (double y = -radius; y <= radius; y++)
 			{
 				readPos.y = hitPos.y + y * octSize;
-				inputNetwork.y = 1 - abs(posRef.y + y * octSize - hitPos.y) / maxDist;
+				inputNetwork.y = 1 - abs(y * octSize) / maxDist;
 
 				for (double z = -radius; z <= radius; z++)
 				{
 					readPos.z = hitPos.z + z * octSize;
-					inputNetwork.z = 1 - abs(posRef.z + z * octSize - hitPos.z) / maxDist;
-
-					for (int axis = 0; axis < 3; axis++)
-					{
-						inputsPos.back()[axis].push_back(std::vector<float>());
-						inputsPos.back()[axis].back().push_back(inputNetwork[axis]);
-					}
+					inputNetwork.z = 1 - abs(z * octSize) / maxDist;
 
 					inputs.back().push_back(readPoint(readPos, colorHolder, levels));
 

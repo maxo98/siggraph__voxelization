@@ -24,17 +24,16 @@
 
 #define GEN 15
 
-bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos,
+bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
 
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks, 
-	std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, std::atomic<bool>* ticket = nullptr);
+	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks, std::atomic<bool>* ticket = nullptr);
 
 float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, Hyperneat* algo);
+	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
-//#define LOAD
+#define LOAD
 
 std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -206,8 +205,6 @@ int main(int argc, char *argv[])
 	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::ONE);
 
 	//Set node location
-	//Data&NetworkSet/Axis/Nodes/Vector
-	std::vector<std::vector<std::vector<std::vector<float>>>> inputsPos;
 	std::vector<std::vector<bool>> inputs;
 	std::vector<glm::vec3> outputs;
 
@@ -225,7 +222,7 @@ int main(int argc, char *argv[])
 		{
 			if (*(data + (x + w * y) * comp) != 0 || *(data + (x + w * y) * comp + 1) != 0 || *(data + (x + w * y) * comp + 2) != 0)
 			{
-				if (scenes[0]->generateData(x, y, cam, inputsPos, inputs, OCTSIZE, RADIUS, in, out) == true)
+				if (scenes[0]->generateData(x, y, cam, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
 					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
 						*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
@@ -234,37 +231,69 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	stbi_image_free(data);
+	
 
 	std::cout << in << " - " << out << std::endl;
 
 #ifndef LOAD
 
+	std::vector<std::vector<std::vector<float>>> inputSubstrate;
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
 	outputSubstrate.push_back(std::vector<float>());
 	outputSubstrate[0].push_back(0);
 
-	//Data&NetworkSet/Axis/CPPNS
+	for (int axis = 0; axis < 3; axis++)
+	{
+		inputSubstrate.push_back(std::vector<std::vector<float>>());
+		
+	}
+
+	glm::dvec3 inputNetwork;
+
+	double maxDist = (RADIUS + 1) * OCTSIZE;
+
+	for (double x = -RADIUS; x <= RADIUS; x++)
+	{
+		inputNetwork.x = 1 - abs(x * OCTSIZE) / maxDist;
+
+		for (double y = -RADIUS; y <= RADIUS; y++)
+		{
+			inputNetwork.y = 1 - abs(y * OCTSIZE) / maxDist;
+
+			for (double z = -RADIUS; z <= RADIUS; z++)
+			{
+				inputNetwork.z = 1 - abs(z * OCTSIZE) / maxDist;
+
+				for (int axis = 0; axis < 3; axis++)
+				{
+					inputSubstrate[axis].push_back(std::vector<float>());
+					inputSubstrate[axis].back().push_back(inputNetwork[axis]);
+				}
+			}
+		}
+	}
+
+	//Axis/CPPNS
 	std::vector<std::vector<NeuralNetwork>> networks;
 
 	networks.resize(3);
-	for (int cpt = 0; cpt < 3; cpt++)
+	for (int axis = 0; axis < 3; axis++)
 	{
-		networks[cpt].resize(popSize);
+		networks[axis].resize(popSize);
 
-		hyper.initNetworks(networks[cpt], inputsPos[0][cpt], outputSubstrate, hiddenSubstrate);
+		hyper.initNetworks(networks[axis], inputSubstrate[axis], outputSubstrate, hiddenSubstrate);
 
-		hyper.generateNetworks(networks[cpt], inputsPos[0][cpt], outputSubstrate, hiddenSubstrate);
+		hyper.generateNetworks(networks[axis], inputSubstrate[axis], outputSubstrate, hiddenSubstrate);
 	}
 
 	//Do test
-	hypeneatTest(popSize, &hyper, outputs, inputsPos, inputs, networks);
+	hypeneatTest(popSize, &hyper, outputs, inputs, networks);
 
 	//Save
 	hyper.saveHistory();
 
-	
+
 #endif // !LOAD
 
 	//Apply to check result
@@ -429,7 +458,14 @@ int main(int argc, char *argv[])
 				{
 					for (int y = 0; y < windowHeight; y++)
 					{
-						window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
+						if (buffer[x][y] != glm::vec3(0.05, 0.05, 0.05))
+						{
+							window.setPixelColor(glm::vec2(x, y), glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
+								*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
+						}
+						else {
+							window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
+						}
 					}
 				}
 
@@ -437,6 +473,8 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+	stbi_image_free(data);
 
 	for (int i = 0; i < neatparam.activationFunctions.size(); i++)
 	{
@@ -453,7 +491,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos,
+bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks)
 {
 	std::vector<float> fitness;
@@ -510,7 +548,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 			tickets.emplace_back(false);
 			pool->queueJob(evaluate, startIndex, currentWorkload + floor(restWorkload), std::ref(fitness), algo, std::ref(outputs), std::ref(inputs), 
-				std::ref(networks), std::ref(inputsPos), &tickets.back());
+				std::ref(networks), &tickets.back());
 			++threads;
 
 			count += currentWorkload + floor(restWorkload);
@@ -523,7 +561,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 #endif //MULTITHREAD
 		currentWorkload = totalWorkload - count;
 
-		evaluate(startIndex, currentWorkload, fitness, algo, outputs, inputs, networks, inputsPos);
+		evaluate(startIndex, currentWorkload, fitness, algo, outputs, inputs, networks);
 
 		for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
 		{
@@ -544,12 +582,11 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks, 
-	std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, std::atomic<bool>* ticket)
+	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks, std::atomic<bool>* ticket)
 {
 	for (int i = startIndex; i < (startIndex + currentWorkload); i++)
 	{
-		fitness[i] = sceneTest(networks, i, outputs, inputs, inputsPos, algo);
+		fitness[i] = sceneTest(networks, i, outputs, inputs, algo);
 	}
 
 	if (ticket != nullptr)
@@ -560,7 +597,7 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 }
 
 float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, Hyperneat* algo)
+	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo)
 {
 	std::vector<float> networkOutputs;
 	glm::vec3 normal;
@@ -569,20 +606,15 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 	inputsFloat.resize(inputs[0].size());
 
-	float score = inputsPos.size();
+	float score = outputs.size();
 
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
 	outputSubstrate.push_back(std::vector<float>());
 	outputSubstrate[0].push_back(0);
 
-	for (int cpt = 0; cpt < inputsPos.size(); cpt++)
+	for (int cpt = 0; cpt < outputs.size(); cpt++)
 	{
-		for (int axis = 0; axis < 3; axis++)
-		{
-			algo->createNetwork(index, networks[axis][index], inputsPos[cpt][axis], outputSubstrate, hiddenSubstrate);
-		}
-
 		for (int i = 0; i < inputsFloat.size(); i++)
 		{
 			inputsFloat[i] = (inputs[cpt][i] == true ? 1 : 0);

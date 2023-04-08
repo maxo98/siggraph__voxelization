@@ -55,8 +55,7 @@ public:
 
 	inline void setLevels(uint8_t newLvl) { levels = newLvl; };
 
-	bool generateData(int x, int y, Camera& camera, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos, std::vector<std::vector<bool>>& inputs, 
-		double octSize, int radius, int& in, int& out);
+	bool generateData(int x, int y, Camera& camera, std::vector<std::vector<bool>>& inputs, double octSize, int radius, int& in, int& out);
 
 	glm::dvec3 min, max;
 
