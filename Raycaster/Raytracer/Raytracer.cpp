@@ -115,7 +115,9 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere8.txt");
+
+	scenes[0]->loadModel(glm::dvec3(3, 3, 4), "Sphere8.txt");
+	//scenes[0]->loadModel(glm::dvec3(3, 2, 4), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -211,7 +213,7 @@ int main(int argc, char *argv[])
 	int w;
 	int h;
 	int comp;
-	unsigned char* data = stbi_load("SphereFront.png", &w, &h, &comp, STBI_rgb_alpha);
+	unsigned char* data = stbi_load("blender2.png", &w, &h, &comp, STBI_rgb_alpha);
 
 	int in = 0;
 	int out = 0;
@@ -220,12 +222,12 @@ int main(int argc, char *argv[])
 	{
 		for (int y = 0; y < windowHeight; y++)
 		{
-			if (*(data + (x + w * y) * comp) != 0 || *(data + (x + w * y) * comp + 1) != 0 || *(data + (x + w * y) * comp + 2) != 0)
+			if (*(data + (x + w * y) * comp) != 71 || *(data + (x + w * y) * comp + 1) != 71 || *(data + (x + w * y) * comp + 2) != 71)
 			{
 				if (scenes[0]->generateData(x, y, cam, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
-					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
-						*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
+					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0, *(data + (x + w * y) * comp + 1) / 255.0,
+						*(data + (x + w * y) * comp + 2) / 255.0));
 				}
 			}
 		}
@@ -378,7 +380,7 @@ int main(int argc, char *argv[])
 				//SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 			}
 
-			if(first == true)
+			//if(first == true)
 			{
 				first = false;
 
@@ -460,16 +462,17 @@ int main(int argc, char *argv[])
 					{
 						if (buffer[x][y] != glm::vec3(0.05, 0.05, 0.05))
 						{
-							window.setPixelColor(glm::vec2(x, y), glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
-								*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
+							window.setPixelColor(glm::vec2(x, y), glm::vec3((*(data + (x + w * y) * comp) / 255.0), (*(data + (x + w * y) * comp + 1) / 255.0),
+								(*(data + (x + w * y) * comp + 2) / 255.0)));
 						}
 						else {
-							window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
+							window.setPixelColor(glm::vec2(x, y), glm::vec3(0, 0, 0));
 						}
 					}
 				}
 
 				SDL_RenderPresent(Window::renderer);
+				std::cout << "render\n";
 			}
 		}
 	}
