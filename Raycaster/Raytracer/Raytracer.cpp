@@ -145,8 +145,8 @@ int main(int argc, char *argv[])
 	neatparam.activationFunctions.push_back(new GaussianActivation());
 	neatparam.activationFunctions.push_back(new AbsActivation());
 
-	neatparam.pbMutateLink = 0.05;// 0.05;
-	neatparam.pbMutateNode = 0.03;//0.03;
+	neatparam.pbMutateLink = 0.10;// 0.05;
+	neatparam.pbMutateNode = 0.06;//0.03;
 	//neatparam.pbWeightShift = 0.7;
 	//neatparam.pbWeightRandom = 0.2;
 	neatparam.pbWeight = 0.9;// 0.9;
