@@ -6,6 +6,7 @@
 #include "ThreadPool.h"
 #include <iomanip>
 #include "Hyperneat.h"
+#include <algorithm> 
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -116,8 +117,8 @@ int main(int argc, char *argv[])
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
 
-	scenes[0]->loadModel(glm::dvec3(3, 3, 4), "Sphere8.txt");
-	//scenes[0]->loadModel(glm::dvec3(3, 2, 4), "Sphere8.txt");
+	//scenes[0]->loadModel(glm::dvec3(3, 3, 4.55), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 2, 4.55), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -213,7 +214,8 @@ int main(int argc, char *argv[])
 	int w;
 	int h;
 	int comp;
-	unsigned char* data = stbi_load("blender2.png", &w, &h, &comp, STBI_rgb_alpha);
+	float* dataValue = stbi_loadf("SphereFrontValue.png", &w, &h, &comp, STBI_rgb_alpha);
+	float* dataSign = stbi_loadf("SphereFrontSign.png", &w, &h, &comp, STBI_rgb_alpha);
 
 	int in = 0;
 	int out = 0;
@@ -222,12 +224,12 @@ int main(int argc, char *argv[])
 	{
 		for (int y = 0; y < windowHeight; y++)
 		{
-			if (*(data + (x + w * y) * comp) != 71 || *(data + (x + w * y) * comp + 1) != 71 || *(data + (x + w * y) * comp + 2) != 71)
+			if (*(dataValue + (x + w * y) * comp) != 0.058187179267406463623046875 || *(dataValue + (x + w * y) * comp + 1) != 0.058187179267406463623046875 || *(dataValue + (x + w * y) * comp + 2) != 0.058187179267406463623046875)
 			{
 				if (scenes[0]->generateData(x, y, cam, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
-					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0, *(data + (x + w * y) * comp + 1) / 255.0,
-						*(data + (x + w * y) * comp + 2) / 255.0));
+					outputs.push_back(glm::vec3(*(dataValue + (x + w * y) * comp) / 255.0, *(dataValue + (x + w * y) * comp + 1) / 255.0,
+						*(dataValue + (x + w * y) * comp + 2) / 255.0));
 				}
 			}
 		}
@@ -462,8 +464,9 @@ int main(int argc, char *argv[])
 					{
 						if (buffer[x][y] != glm::vec3(0.05, 0.05, 0.05))
 						{
-							window.setPixelColor(glm::vec2(x, y), glm::vec3((*(data + (x + w * y) * comp) / 255.0), (*(data + (x + w * y) * comp + 1) / 255.0),
-								(*(data + (x + w * y) * comp + 2) / 255.0)));
+							window.setPixelColor(glm::vec2(x, y), glm::vec3(std::max(std::min(*(dataValue + (x + w * y) * comp) * (*(dataSign + (x + w * y) * comp) > 0 ? 1 : -1), 1.0f), 0.0f),
+								std::max(std::min(*(dataValue + (x + w * y) * comp + 1) * (*(dataSign + (x + w * y) * comp + 1) > 0 ? 1 : -1), 1.0f), 0.0f),
+								std::max(std::min(*(dataValue + (x + w * y) * comp + 2) * (*(dataSign + (x + w * y) * comp + 2) > 0 ? 1 : -1), 1.0f), 0.0f)));
 						}
 						else {
 							window.setPixelColor(glm::vec2(x, y), glm::vec3(0, 0, 0));
@@ -477,7 +480,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	stbi_image_free(data);
+	stbi_image_free(dataValue);
+	stbi_image_free(dataSign);
 
 	for (int i = 0; i < neatparam.activationFunctions.size(); i++)
 	{
