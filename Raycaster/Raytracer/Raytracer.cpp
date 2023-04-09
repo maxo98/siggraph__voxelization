@@ -17,11 +17,11 @@
 
 #define MULTITHREAD
 
-#define RADIUS 2
+#define RADIUS 10
 
 #define OCTSIZE 0.00390625
 
-#define GEN 15
+#define GEN 20
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
@@ -32,11 +32,11 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
-#define LOAD
+//#define LOAD
 
 std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
-	//p1.push_back(0.5f);
+	p1.push_back(0.5f);
 	return p1;
 }
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 3, 4), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 3, 4.55), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -144,8 +144,8 @@ int main(int argc, char *argv[])
 	neatparam.activationFunctions.push_back(new LinearActivation());
 	//neatparam.activationFunctions.push_back(new AbsActivation());
 
-	neatparam.pbMutateLink = 0.10;// 0.05;
-	neatparam.pbMutateNode = 0.06;//0.03;
+	neatparam.pbMutateLink = 0.15;// 0.05;
+	neatparam.pbMutateNode = 0.09;//0.03;
 	//neatparam.pbWeightShift = 0.7;
 	//neatparam.pbWeightRandom = 0.2;
 	neatparam.pbWeight = 0.9;// 0.9;
@@ -176,22 +176,22 @@ int main(int argc, char *argv[])
 	neatparam.pbMutateOnly = 0.25;
 	neatparam.pbMateOnly = 0.2;
 
-	neatparam.speciationDistance = 2.0;
+	neatparam.speciationDistance = 3.0;
 
 
 	neatparam.speciationDistanceMod = 0.3;
-	neatparam.minExpectedSpecies = 6;
-	neatparam.maxExpectedSpecies = 12;
+	neatparam.minExpectedSpecies = 4;
+	neatparam.maxExpectedSpecies = 8;
 	neatparam.adaptSpeciation = true;
 
 	neatparam.keepChamp = true;
-	neatparam.elistism = true;
+	neatparam.elistism = false;
 	neatparam.rouletteMultiplier = 2.0;
 
 	HyperneatParameters hyperneatParam;
 
 	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput = 1;
+	hyperneatParam.cppnInput = 2;
 	hyperneatParam.cppnInputFunction = normalEstimationCppnInput;
 	hyperneatParam.cppnOutput = 1;
 	hyperneatParam.nDimensions = 1;
@@ -211,7 +211,8 @@ int main(int argc, char *argv[])
 	int w;
 	int h;
 	int comp;
-	unsigned char* data = stbi_load("SphereFront.png", &w, &h, &comp, STBI_rgb_alpha);
+	float* dataValue = stbi_loadf("SphereFrontValue.png", &w, &h, &comp, STBI_rgb_alpha);
+	float* dataSign = stbi_loadf("SphereFrontSign.png", &w, &h, &comp, STBI_rgb_alpha);
 
 	int in = 0;
 	int out = 0;
@@ -220,12 +221,13 @@ int main(int argc, char *argv[])
 	{
 		for (int y = 0; y < windowHeight; y++)
 		{
-			if (*(data + (x + w * y) * comp) != 71 || *(data + (x + w * y) * comp + 1) != 71 || *(data + (x + w * y) * comp + 2) != 71)
+			if (*(dataValue + (x + w * y) * comp) != 0.058187179267406463623046875 || *(dataValue + (x + w * y) * comp + 1) != 0.058187179267406463623046875 || *(dataValue + (x + w * y) * comp + 2) != 0.058187179267406463623046875)
 			{
 				if (scenes[0]->generateData(x, y, cam, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
-					outputs.push_back(glm::normalize(glm::vec3(*(data + (x + w * y) * comp) / 255.0, *(data + (x + w * y) * comp + 1) / 255.0,
-						*(data + (x + w * y) * comp + 2) / 255.0)));
+					outputs.push_back(glm::normalize(glm::vec3(*(dataValue + (x + w * y) * comp) * (*(dataSign + (x + w * y) * comp) > 0 ? 1 : -1),
+						*(dataValue + (x + w * y) * comp + 1) * (*(dataSign + (x + w * y) * comp + 1) > 0 ? 1 : -1),
+						*(dataValue + (x + w * y) * comp + 2) * (*(dataSign + (x + w * y) * comp + 2) > 0 ? 1 : -1))));
 				}
 			}
 		}
@@ -467,7 +469,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	stbi_image_free(data);
+	stbi_image_free(dataSign);
+	stbi_image_free(dataValue);
 
 	for (int i = 0; i < neatparam.activationFunctions.size(); i++)
 	{
@@ -620,7 +623,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 		}
 
 		//Do test
-		normal = abs(glm::normalize(normal));
+		normal = glm::normalize(normal);
 
 		float square = 0;
 
