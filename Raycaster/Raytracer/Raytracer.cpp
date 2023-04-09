@@ -17,8 +17,7 @@
 
 #define MULTITHREAD
 
-#define DIAMETER 5
-#define RADIUS 2
+#define RADIUS 1
 
 #define OCTSIZE 0.00390625
 
@@ -186,7 +185,7 @@ int main(int argc, char *argv[])
 	neatparam.adaptSpeciation = true;
 
 	neatparam.keepChamp = true;
-	neatparam.elistism = true;
+	neatparam.elistism = false;
 	neatparam.rouletteMultiplier = 2.0;
 
 	HyperneatParameters hyperneatParam;
@@ -214,7 +213,8 @@ int main(int argc, char *argv[])
 	int w;
 	int h;
 	int comp;
-	unsigned char* data = stbi_load("SphereFront.png", &w, &h, &comp, STBI_rgb_alpha);
+	float* dataValue = stbi_loadf("SphereFrontValue.png", &w, &h, &comp, STBI_rgb_alpha);
+	float* dataSign = stbi_loadf("SphereFrontSign.png", &w, &h, &comp, STBI_rgb_alpha);
 
 	int in = 0;
 	int out = 0;
@@ -223,18 +223,20 @@ int main(int argc, char *argv[])
 	{
 		for (int y = 0; y < windowHeight; y++)
 		{
-			if (*(data + (x + w * y) * comp) != 0 || *(data + (x + w * y) * comp + 1) != 0 || *(data + (x + w * y) * comp + 2) != 0)
+			if (*(dataValue + (x + w * y) * comp) != 0.058187179267406463623046875 || *(dataValue + (x + w * y) * comp + 1) != 0.058187179267406463623046875 || *(dataValue + (x + w * y) * comp + 2) != 0.058187179267406463623046875)
 			{
 				if (scenes[0]->generateData(x, y, cam, inputsPos, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
-					outputs.push_back(glm::vec3(*(data + (x + w * y) * comp) / 255.0 - 0.5 * 2, *(data + (x + w * y) * comp + 1) / 255.0 - 0.5 * 2,
-						*(data + (x + w * y) * comp + 2) / 255.0 - 0.5 * 2));
+					outputs.push_back(glm::normalize(glm::vec3(*(dataValue + (x + w * y) * comp) * (*(dataSign + (x + w * y) * comp) > 0 ? 1 : -1),
+						*(dataValue + (x + w * y) * comp + 1) * (*(dataSign + (x + w * y) * comp + 1) > 0 ? 1 : -1),
+						*(dataValue + (x + w * y) * comp + 2) * (*(dataSign + (x + w * y) * comp + 2) > 0 ? 1 : -1))));
 				}
 			}
 		}
 	}
 
-	stbi_image_free(data);
+	stbi_image_free(dataValue);
+	stbi_image_free(dataSign);
 
 	std::cout << in << " - " << out << std::endl;
 
