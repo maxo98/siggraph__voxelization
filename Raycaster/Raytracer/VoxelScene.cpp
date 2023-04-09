@@ -565,17 +565,17 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				for (double x = -radius; x <= radius; x++)
 				{
 					readPos.x = hitPos.x + x * octSize;
-					inputNetwork.x = (1 - abs(x * octSize) / maxDist) * (x < 0 ? -1 : 1);
+					inputNetwork.x = (1 - abs(x * octSize) / maxDist) * (x < 0 ? 1 : -1);
 
 					for (double y = -radius; y <= radius; y++)
 					{
 						readPos.y = hitPos.y + y * octSize;
-						inputNetwork.y = (1 - abs(y * octSize) / maxDist) * (y < 0 ? -1 : 1);
+						inputNetwork.y = (1 - abs(y * octSize) / maxDist) * (y < 0 ? 1 : -1);
 
 						for (double z = -radius; z <= radius; z++)
 						{
 							readPos.z = hitPos.z + z * octSize;
-							inputNetwork.z = (1 - abs(z * octSize) / maxDist) * (z < 0 ? -1 : 1);
+							inputNetwork.z = (1 - abs(z * octSize) / maxDist) * (z < 0 ? 1 : -1);
 
 							for (int axis = 0; axis < 3; axis++)
 							{
@@ -704,17 +704,17 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 		for (double x = -radius; x <= radius; x++)
 		{
 			readPos.x = hitPos.x + x * octSize;
-			inputNetwork.x = (1 - abs(x * octSize) / maxDist) * (x < 0 ? -1 : 1);
+			inputNetwork.x = (1 - abs(x * octSize) / maxDist) * (x < 0 ? 1 : -1);
 
 			for (double y = -radius; y <= radius; y++)
 			{
 				readPos.y = hitPos.y + y * octSize;
-				inputNetwork.y = (1 - abs(y * octSize) / maxDist) * (y < 0 ? -1 : 1);
+				inputNetwork.y = (1 - abs(y * octSize) / maxDist) * (y < 0 ? 1 : -1);
 
 				for (double z = -radius; z <= radius; z++)
 				{
 					readPos.z = hitPos.z + z * octSize;
-					inputNetwork.z = (1 - abs(z * octSize) / maxDist) * (z < 0 ? -1 : 1);
+					inputNetwork.z = (1 - abs(z * octSize) / maxDist) * (z < 0 ? 1 : -1);
 
 					inputs.back().push_back(readPoint(readPos, colorHolder, levels));
 
@@ -723,7 +723,6 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 						test += inputNetwork;
 					}
 					
-
 					if (z == 0 && x == 0 && y == 0)
 					{
 						if (inputs.back().back() == true)

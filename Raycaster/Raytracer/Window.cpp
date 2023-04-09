@@ -1,5 +1,6 @@
 //#include "stdafx.h"
 #include "Window.h"
+#include <algorithm>
 
 SDL_Renderer* Window::renderer = nullptr;
 
@@ -83,6 +84,6 @@ void Window::setPixelColor(glm::vec2 pos, glm::vec3 color)
 
 void Window::setPixelColor(glm::vec2 pos, glm::vec4 color)
 {
-	SDL_SetRenderDrawColor(renderer, color[0], color[1], color[2], color[3]);
+	SDL_SetRenderDrawColor(renderer, std::max(std::min(color[0], 255.0f), 0.0f), std::max(std::min(color[1], 255.0f), 0.0f), std::max(std::min(color[2], 255.0f), 0.0f), std::max(std::min(color[3], 255.0f), 0.0f));
 	SDL_RenderDrawPoint(renderer, pos[0], pos[1]);
 }

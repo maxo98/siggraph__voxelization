@@ -17,7 +17,7 @@
 
 #define MULTITHREAD
 
-#define RADIUS 5
+#define RADIUS 2
 
 #define OCTSIZE 0.00390625
 
