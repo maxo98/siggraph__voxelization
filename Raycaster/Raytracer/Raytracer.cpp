@@ -250,25 +250,33 @@ int main(int argc, char *argv[])
 	}
 
 	glm::dvec3 inputNetwork;
+	glm::dvec3 pointPos;
 
-	double maxDist = (RADIUS + 1) * OCTSIZE;
+	double maxDistPlus = (RADIUS + 1) * OCTSIZE;
+	double maxDist = RADIUS * OCTSIZE;
 
 	for (double x = -RADIUS; x <= RADIUS; x++)
 	{
-		inputNetwork.x = (1 - abs(x * OCTSIZE) / maxDist) * (x < 0 ? -1 : 1);
+		inputNetwork.x = (1 - abs(x * OCTSIZE) / maxDistPlus) * (x < 0 ? -1 : 1);
+		pointPos.x = x * OCTSIZE;
 
 		for (double y = -RADIUS; y <= RADIUS; y++)
 		{
-			inputNetwork.y = (1 - abs(y * OCTSIZE) / maxDist) * (y < 0 ? -1 : 1);
+			inputNetwork.y = (1 - abs(y * OCTSIZE) / maxDistPlus) * (y < 0 ? -1 : 1);
+			pointPos.y = y * OCTSIZE;
 
 			for (double z = -RADIUS; z <= RADIUS; z++)
 			{
-				inputNetwork.z = (1 - abs(z * OCTSIZE) / maxDist) * (z < 0 ? -1 : 1);
+				inputNetwork.z = (1 - abs(z * OCTSIZE) / maxDistPlus) * (z < 0 ? -1 : 1);
+				pointPos.z = z * OCTSIZE;
 
-				for (int axis = 0; axis < 3; axis++)
+				if (maxDist >= glm::length(pointPos))
 				{
-					inputSubstrate[axis].push_back(std::vector<float>());
-					inputSubstrate[axis].back().push_back(inputNetwork[axis]);
+					for (int axis = 0; axis < 3; axis++)
+					{
+						inputSubstrate[axis].push_back(std::vector<float>());
+						inputSubstrate[axis].back().push_back(inputNetwork[axis]);
+					}
 				}
 			}
 		}
