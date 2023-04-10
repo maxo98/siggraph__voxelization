@@ -137,8 +137,8 @@ int main(int argc, char *argv[])
 
 	NeatParameters neatparam;
 
-	//neatparam.activationFunctions.push_back(new thresholdActivation());
-	neatparam.activationFunctions.push_back(new SigmoidActivation());
+	neatparam.activationFunctions.push_back(new ThresholdActivation());
+	neatparam.activationFunctions.push_back(new TanhActivation());
 	neatparam.activationFunctions.push_back(new SinActivation());
 	neatparam.activationFunctions.push_back(new GaussianActivation());
 	neatparam.activationFunctions.push_back(new LinearActivation());
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 	neatparam.excessCoeff = 1.0;
 	neatparam.mutDiffCoeff = 0.4;
 	neatparam.activationDiffCoeff = 1.0;
-	neatparam.weightCoeff = 1;
+	neatparam.weightCoeff = 0;
 
 	neatparam.killRate = 0.2;
 
