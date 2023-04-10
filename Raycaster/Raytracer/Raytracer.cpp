@@ -17,28 +17,22 @@
 
 #define MULTITHREAD
 
-#define RADIUS 10
+#define RADIUS 3
 
 #define OCTSIZE 0.00390625
 
-#define GEN 20
+#define GEN 4
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
+	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks);
 
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks, std::atomic<bool>* ticket = nullptr);
+	const std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks, std::atomic<bool>* ticket = nullptr);
 
-float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
+float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
 //#define LOAD
-
-std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
-{
-	p1.push_back(0.5f);
-	return p1;
-}
 
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
@@ -54,8 +48,6 @@ void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouse
 		}
 	}
 }
-
-
 
 int main(int argc, char *argv[])
 {
@@ -137,8 +129,8 @@ int main(int argc, char *argv[])
 
 	NeatParameters neatparam;
 
-	//neatparam.activationFunctions.push_back(new thresholdActivation());
-	neatparam.activationFunctions.push_back(new SigmoidActivation());
+	neatparam.activationFunctions.push_back(new ThresholdActivation());
+	neatparam.activationFunctions.push_back(new TanhActivation());
 	neatparam.activationFunctions.push_back(new SinActivation());
 	neatparam.activationFunctions.push_back(new GaussianActivation());
 	neatparam.activationFunctions.push_back(new LinearActivation());
@@ -159,7 +151,7 @@ int main(int argc, char *argv[])
 	neatparam.excessCoeff = 1.0;
 	neatparam.mutDiffCoeff = 0.4;
 	neatparam.activationDiffCoeff = 1.0;
-	neatparam.weightCoeff = 1;
+	neatparam.weightCoeff = 0;
 
 	neatparam.killRate = 0.2;
 
@@ -191,18 +183,18 @@ int main(int argc, char *argv[])
 	HyperneatParameters hyperneatParam;
 
 	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput = 2;
-	hyperneatParam.cppnInputFunction = normalEstimationCppnInput;
+	hyperneatParam.cppnInput = 6;
+	hyperneatParam.cppnInputFunction = basicCppnInput;
 	hyperneatParam.cppnOutput = 1;
 	hyperneatParam.nDimensions = 1;
 	hyperneatParam.thresholdFunction = noThreshold;
 	hyperneatParam.weightModifierFunction = noChangeWeight;
 
-	int popSize = 150;
+	int popSize = 300;
 	int result = 0;
 	int count = 0;
 
-	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::ONE);
+	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::FULL);
 
 	//Set node location
 	std::vector<std::vector<bool>> inputs;
@@ -237,17 +229,23 @@ int main(int argc, char *argv[])
 
 #ifndef LOAD
 
-	std::vector<std::vector<std::vector<float>>> inputSubstrate;
+	std::vector<std::vector<float>> inputSubstrate;
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
 	outputSubstrate.push_back(std::vector<float>());
+	outputSubstrate.push_back(std::vector<float>());
+	outputSubstrate.push_back(std::vector<float>());
+	outputSubstrate[0].push_back(1);
+	outputSubstrate[0].push_back(0);
 	outputSubstrate[0].push_back(0);
 
-	for (int axis = 0; axis < 3; axis++)
-	{
-		inputSubstrate.push_back(std::vector<std::vector<float>>());
-		
-	}
+	outputSubstrate[1].push_back(0);
+	outputSubstrate[1].push_back(1);
+	outputSubstrate[1].push_back(0);
+
+	outputSubstrate[2].push_back(0);
+	outputSubstrate[2].push_back(0);
+	outputSubstrate[2].push_back(1);
 
 	glm::dvec3 inputNetwork;
 	glm::dvec3 pointPos;
@@ -272,10 +270,11 @@ int main(int argc, char *argv[])
 
 				if (maxDist >= glm::length(pointPos))
 				{
+					inputSubstrate.push_back(std::vector<float>());
+
 					for (int axis = 0; axis < 3; axis++)
 					{
-						inputSubstrate[axis].push_back(std::vector<float>());
-						inputSubstrate[axis].back().push_back(inputNetwork[axis]);
+						inputSubstrate.back().push_back(inputNetwork[axis]);
 					}
 				}
 			}
@@ -284,18 +283,14 @@ int main(int argc, char *argv[])
 
 	//std::cout << glm::normalize(test) << std::endl;
 
-	//Axis/CPPNS
-	std::vector<std::vector<NeuralNetwork>> networks;
+	//CPPNS
+	std::vector<NeuralNetwork> networks;
 
-	networks.resize(3);
-	for (int axis = 0; axis < 3; axis++)
-	{
-		networks[axis].resize(popSize);
+	networks.resize(popSize);
 
-		hyper.initNetworks(networks[axis], inputSubstrate[axis], outputSubstrate, hiddenSubstrate);
+	hyper.initNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
 
-		hyper.generateNetworks(networks[axis], inputSubstrate[axis], outputSubstrate, hiddenSubstrate);
-	}
+	hyper.generateNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
 
 	//Do test
 	hypeneatTest(popSize, &hyper, outputs, inputs, networks);
@@ -496,7 +491,7 @@ int main(int argc, char *argv[])
 }
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks)
+	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks)
 {
 	std::vector<float> fitness;
 
@@ -586,7 +581,7 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks, std::atomic<bool>* ticket)
+	const std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks, std::atomic<bool>* ticket)
 {
 	for (int i = startIndex; i < (startIndex + currentWorkload); i++)
 	{
@@ -600,7 +595,7 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 	}
 }
 
-float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
+float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo)
 {
 	std::vector<float> networkOutputs;
@@ -624,23 +619,31 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 			inputsFloat[i] = (inputs[cpt][i] == true ? 1 : 0);
 		}
 
+		networks[index].compute(inputsFloat, networkOutputs);
+
 		for (int axis = 0; axis < 3; axis++)
 		{
-			networks[axis][index].compute(inputsFloat, networkOutputs);
-			normal[axis] = networkOutputs[0];
+			normal[axis] = networkOutputs[axis];
 		}
 
 		//Do test
-		normal = glm::normalize(normal);
-
-		float square = 0;
-
-		for (int axis = 0; axis < 3; axis++)
+		if (normal.x != 0 || normal.y != 0 || normal.z != 0)
 		{
-			square += pow(normal[axis] - outputs[cpt][axis], 2);
+			normal = glm::normalize(normal);
+
+			float square = 0;
+
+			for (int axis = 0; axis < 3; axis++)
+			{
+				square += pow(normal[axis] - outputs[cpt][axis], 2);
+			}
+
+			score -= sqrt(square);
+		}
+		else {
+			score -= 1;
 		}
 
-		score -= sqrt(square);
 	}
 
 	return score / 2000.0;

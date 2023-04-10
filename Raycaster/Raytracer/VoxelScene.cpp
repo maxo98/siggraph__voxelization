@@ -554,12 +554,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				glm::dvec3 inputNetwork;
 				glm::dvec3 pointPos;
 
-				std::vector<std::vector<std::vector<float>>> inputsPos;
-
-				for (int axis = 0; axis < 3; axis++)
-				{
-					inputsPos.push_back(std::vector<std::vector<float>>());
-				}
+				std::vector<std::vector<float>> inputsPos;
 
 				double maxDistPlus = (radius + 1) * octSize;
 				double maxDist = radius * octSize;
@@ -584,10 +579,12 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 
 							if (maxDist >= glm::length(pointPos))
 							{
+								inputsPos.push_back(std::vector<float>());
+
 								for (int axis = 0; axis < 3; axis++)
 								{
-									inputsPos[axis].push_back(std::vector<float>());
-									inputsPos[axis].back().push_back(inputNetwork[axis]);
+									
+									inputsPos.back().push_back(inputNetwork[axis]);
 								}
 
 								inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
@@ -599,14 +596,27 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 				std::vector<std::vector<float>> outputSubstrate;
 				outputSubstrate.push_back(std::vector<float>());
+				outputSubstrate.push_back(std::vector<float>());
+				outputSubstrate.push_back(std::vector<float>());
+				outputSubstrate[0].push_back(1);
 				outputSubstrate[0].push_back(0);
+				outputSubstrate[0].push_back(0);
+
+				outputSubstrate[1].push_back(0);
+				outputSubstrate[1].push_back(1);
+				outputSubstrate[1].push_back(0);
+
+				outputSubstrate[2].push_back(0);
+				outputSubstrate[2].push_back(0);
+				outputSubstrate[2].push_back(1);
+
+				NeuralNetwork network;
+				hyperneat->genomeToNetwork(*gen, network, inputsPos, outputSubstrate, hiddenSubstrate);
+				network.compute(inputs, outputs);
 
 				for (int axis = 0; axis < 3; axis++)
 				{
-					NeuralNetwork network;
-					hyperneat->genomeToNetwork(*gen, network, inputsPos[axis], outputSubstrate, hiddenSubstrate);
-					network.compute(inputs, outputs);
-					normal[axis] = outputs[0];
+					normal[axis] = outputs[axis];
 				}
 
 				normal = glm::normalize(normal);
