@@ -32,7 +32,7 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
-//#define LOAD
+#define LOAD
 
 std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	//scenes.push_back(new VoxelScene(8));
 
 	//scene.addPointLight(glm::vec3(1.75, 3, 0));
-	scenes[renderScene]->addPointLight(glm::vec3(3.5, 4, 0));
+	scenes[renderScene]->addPointLight(glm::vec3(3.5, 3, 0));
 
 	//Spaceship
 	//2.18164 2.135 2.43359
