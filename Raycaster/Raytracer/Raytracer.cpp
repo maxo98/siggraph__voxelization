@@ -17,11 +17,11 @@
 
 #define MULTITHREAD
 
-#define RADIUS 3
+#define RADIUS 7
 
 #define OCTSIZE 0.00390625
 
-#define GEN 4
+#define GEN 50
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 3, 4.55), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 2, 4.55), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -136,8 +136,8 @@ int main(int argc, char *argv[])
 	neatparam.activationFunctions.push_back(new LinearActivation());
 	//neatparam.activationFunctions.push_back(new AbsActivation());
 
-	neatparam.pbMutateLink = 0.15;// 0.05;
-	neatparam.pbMutateNode = 0.09;//0.03;
+	neatparam.pbMutateLink = 0.10;// 0.05;
+	neatparam.pbMutateNode = 0.06;//0.03;
 	//neatparam.pbWeightShift = 0.7;
 	//neatparam.pbWeightRandom = 0.2;
 	neatparam.pbWeight = 0.9;// 0.9;
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
 	hyperneatParam.activationFunction = new LinearActivation();
 	hyperneatParam.cppnInput = 6;
-	hyperneatParam.cppnInputFunction = basicCppnInput;
+	hyperneatParam.cppnInputFunction = biasCppnInput;
 	hyperneatParam.cppnOutput = 1;
 	hyperneatParam.nDimensions = 1;
 	hyperneatParam.thresholdFunction = noThreshold;
