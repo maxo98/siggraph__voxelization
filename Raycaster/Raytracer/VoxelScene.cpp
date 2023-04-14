@@ -789,7 +789,7 @@ bool VoxelScene::addPoint(glm::dvec3 pos, glm::dvec3 color)
 	if (currentTree->contains != OCTREE_CONTENT::FILLED)//Should be empty or filled if we are at max level 
 	{
 		currentTree->contains = OCTREE_CONTENT::FILLED;
-		*currentTree->object = color;
+		currentTree->object = new glm::dvec3(color);
 
 		return true;
 	}
