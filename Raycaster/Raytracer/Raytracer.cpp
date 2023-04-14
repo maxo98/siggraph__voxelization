@@ -5,7 +5,8 @@
 #include "VoxelScene.h"
 #include "ThreadPool.h"
 #include <iomanip>
-#include "Hyperneat.h"
+#include "Genome.h"
+#include "Neat.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -17,20 +18,15 @@
 
 #define MULTITHREAD
 
-#define RADIUS 7
+#define RADIUS 4
 
 #define OCTSIZE 0.00390625
 
 #define GEN 50
 
-bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks);
 
-void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks, std::atomic<bool>* ticket = nullptr);
-
-float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
+float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
+	const std::vector<std::vector<bool>>& inputs);
 
 //#define LOAD
 
@@ -127,78 +123,10 @@ int main(int argc, char *argv[])
 	cam.lookAt(glm::vec3(3, 3, 5));
 
 
-	NeatParameters neatparam;
-
-	neatparam.activationFunctions.push_back(new ThresholdActivation());
-	neatparam.activationFunctions.push_back(new TanhActivation());
-	neatparam.activationFunctions.push_back(new SinActivation());
-	neatparam.activationFunctions.push_back(new GaussianActivation());
-	neatparam.activationFunctions.push_back(new LinearActivation());
-	//neatparam.activationFunctions.push_back(new AbsActivation());
-
-	neatparam.pbMutateLink = 0.10;// 0.05;
-	neatparam.pbMutateNode = 0.06;//0.03;
-	//neatparam.pbWeightShift = 0.7;
-	//neatparam.pbWeightRandom = 0.2;
-	neatparam.pbWeight = 0.9;// 0.9;
-	neatparam.pbToggleLink = 0.005;// 0.05;
-	//neatparam.weightShiftStrength = 2.5;
-	//neatparam.weightRandomStrength = 2.5;
-	neatparam.weightMuteStrength = 1.5;// 2.5;
-	neatparam.pbMutateActivation = 0.7;
-
-	neatparam.disjointCoeff = 1.0;
-	neatparam.excessCoeff = 1.0;
-	neatparam.mutDiffCoeff = 0.4;
-	neatparam.activationDiffCoeff = 1.0;
-	neatparam.weightCoeff = 0;
-
-	neatparam.killRate = 0.2;
-
-	neatparam.champFileSave = "champ";
-	neatparam.avgFileSave = "avg";//Without extension type file
-	neatparam.saveChampHistory = true;
-	neatparam.saveAvgHistory = true;
-
-	neatparam.pbMateMultipoint = 0.6;
-	neatparam.pbMateSinglepoint = 0.0;
-	neatparam.interspeciesMateRate = 0.001;
-	neatparam.dropOffAge = 15;
-	neatparam.ageSignificance = 1.0;
-	neatparam.pbMutateOnly = 0.25;
-	neatparam.pbMateOnly = 0.2;
-
-	neatparam.speciationDistance = 3.0;
-
-
-	neatparam.speciationDistanceMod = 0.3;
-	neatparam.minExpectedSpecies = 4;
-	neatparam.maxExpectedSpecies = 8;
-	neatparam.adaptSpeciation = true;
-
-	neatparam.keepChamp = true;
-	neatparam.elistism = false;
-	neatparam.rouletteMultiplier = 2.0;
-
-	HyperneatParameters hyperneatParam;
-
-	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput = 6;
-	hyperneatParam.cppnInputFunction = biasCppnInput;
-	hyperneatParam.cppnOutput = 1;
-	hyperneatParam.nDimensions = 1;
-	hyperneatParam.thresholdFunction = noThreshold;
-	hyperneatParam.weightModifierFunction = noChangeWeight;
-
-	int popSize = 300;
-	int result = 0;
-	int count = 0;
-
-	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::FULL);
 
 	//Set node location
 	std::vector<std::vector<bool>> inputs;
-	std::vector<glm::vec3> outputs;
+	std::vector<std::vector<float>> outputs;
 
 	int w;
 	int h;
@@ -217,9 +145,16 @@ int main(int argc, char *argv[])
 			{
 				if (scenes[0]->generateData(x, y, cam, inputs, OCTSIZE, RADIUS, in, out) == true)
 				{
-					outputs.push_back(glm::normalize(glm::vec3(*(dataValue + (x + w * y) * comp) * (*(dataSign + (x + w * y) * comp) > 0 ? 1 : -1),
+					glm::vec3 normal = glm::normalize(glm::vec3(*(dataValue + (x + w * y) * comp) * (*(dataSign + (x + w * y) * comp) > 0 ? 1 : -1),
 						*(dataValue + (x + w * y) * comp + 1) * (*(dataSign + (x + w * y) * comp + 1) > 0 ? 1 : -1),
-						*(dataValue + (x + w * y) * comp + 2) * (*(dataSign + (x + w * y) * comp + 2) > 0 ? 1 : -1))));
+						*(dataValue + (x + w * y) * comp + 2) * (*(dataSign + (x + w * y) * comp + 2) > 0 ? 1 : -1)));
+
+					outputs.push_back(std::vector<float>());
+
+					for (int axis = 0; axis < 3; axis++)
+					{
+						outputs.back().push_back(normal[axis]);
+					}
 				}
 			}
 		}
@@ -229,88 +164,94 @@ int main(int argc, char *argv[])
 
 #ifndef LOAD
 
-	std::vector<std::vector<float>> inputSubstrate;
-	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
-	std::vector<std::vector<float>> outputSubstrate;
-	outputSubstrate.push_back(std::vector<float>());
-	outputSubstrate.push_back(std::vector<float>());
-	outputSubstrate.push_back(std::vector<float>());
-	outputSubstrate[0].push_back(1);
-	outputSubstrate[0].push_back(0);
-	outputSubstrate[0].push_back(0);
+	NeuralNetwork network;
 
-	outputSubstrate[1].push_back(0);
-	outputSubstrate[1].push_back(1);
-	outputSubstrate[1].push_back(0);
+	std::vector<Activation*> arrActiv;
+	Activation* tanh = new TanhActivation();
+	Activation* linear = new LinearActivation();
+	arrActiv.push_back(tanh);
 
-	outputSubstrate[2].push_back(0);
-	outputSubstrate[2].push_back(0);
-	outputSubstrate[2].push_back(1);
+	std::unordered_map<std::pair<unsigned int, unsigned int>, unsigned int> allConn;
 
-	glm::dvec3 inputNetwork;
+	int nInputs = 0;
+
 	glm::dvec3 pointPos;
 
-	double maxDistPlus = (RADIUS + 1) * OCTSIZE;
 	double maxDist = RADIUS * OCTSIZE;
 
 	for (double x = -RADIUS; x <= RADIUS; x++)
 	{
-		inputNetwork.x = (1 - abs(x * OCTSIZE) / maxDistPlus) * (x < 0 ? -1 : 1);
 		pointPos.x = x * OCTSIZE;
 
 		for (double y = -RADIUS; y <= RADIUS; y++)
 		{
-			inputNetwork.y = (1 - abs(y * OCTSIZE) / maxDistPlus) * (y < 0 ? -1 : 1);
 			pointPos.y = y * OCTSIZE;
 
 			for (double z = -RADIUS; z <= RADIUS; z++)
 			{
-				inputNetwork.z = (1 - abs(z * OCTSIZE) / maxDistPlus) * (z < 0 ? -1 : 1);
 				pointPos.z = z * OCTSIZE;
 
 				if (maxDist >= glm::length(pointPos))
 				{
-					inputSubstrate.push_back(std::vector<float>());
-
-					for (int axis = 0; axis < 3; axis++)
-					{
-						inputSubstrate.back().push_back(inputNetwork[axis]);
-					}
+					nInputs++;
 				}
 			}
 		}
 	}
 
-	//std::cout << glm::normalize(test) << std::endl;
+	nInputs++;//Bias
 
-	//CPPNS
-	std::vector<NeuralNetwork> networks;
+	Genome gen(nInputs, 3, arrActiv);
 
-	networks.resize(popSize);
+	gen.fullyConnect(2, 40, tanh, linear, allConn, xavierUniformInit, seed);
 
-	hyper.initNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
-
-	hyper.generateNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
+	Neat::genomeToNetwork(gen, network);
 
 	//Do test
-	hypeneatTest(popSize, &hyper, outputs, inputs, networks);
+	int epoch = 1000000000;
+	float lRate = 0.00001;
+
+	unsigned int percent = 0;
+	unsigned int div = epoch / 100.f;
+
+	if (div == 0) div = 1;
+
+	std::cout << "Training" << std::endl;
+
+	std::cout << "Progress: " << percent << "%" << std::endl;
+
+	std::vector<float> inputsFloat;
+	inputsFloat.resize(inputs[0].size()+1);
+
+	inputsFloat.back() = 0.5;
+
+	for (int i = 0; i < epoch; i++)
+	{
+		int index = randInt(0, inputs.size() - 1);
+
+		for (int i = 0; i < inputsFloat.size(); i++)
+		{
+			inputsFloat[i] = (inputs[index][i] == true ? 1 : 0);
+		}
+
+		network.backprop(inputsFloat, outputs[index], lRate, true);
+
+		if ((i + 1) % div == 0)
+		{
+			percent++;
+			std::cout << "Progress: " << percent << " %\n";
+		}
+	}
 
 	//Save
-	hyper.saveHistory();
+	network.applyBackprop(gen);
+	gen.saveCurrentGenome("saveGenome.txt");
 
-
-#endif // !LOAD
-
-	//Apply to check result
-	Genome* genP;
-
-#ifndef LOAD
-	genP = hyper.getGoat();
-#else
+#else // LOAD
 	Genome gen = Genome::loadGenome("saveGenome.txt");
-
-	genP = &gen;
-#endif // !LOAD
+	NeuralNetwork network;
+	Neat::genomeToNetwork(gen, network);
+#endif 
 
 	//applyResult(&network, scenes, renderScene);
 
@@ -415,7 +356,7 @@ int main(int argc, char *argv[])
 					restWorkload = workloadFrac;
 
 					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyper, genP, &tickets.back());
+					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &network, &tickets.back());
 					++threads;
 
 					x += currentWorkload / windowHeight;
@@ -449,7 +390,7 @@ int main(int argc, char *argv[])
 					count--;
 				}
 
-				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &hyper, genP);
+				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &network);
 
 				timer = SDL_GetTicks();
 
@@ -475,12 +416,10 @@ int main(int argc, char *argv[])
 	stbi_image_free(dataSign);
 	stbi_image_free(dataValue);
 
-	for (int i = 0; i < neatparam.activationFunctions.size(); i++)
-	{
-		delete neatparam.activationFunctions[i];
-	}
-
-	delete hyperneatParam.activationFunction;
+#ifndef LOAD
+	delete tanh;
+	delete linear;
+#endif // !LOAD
 
 	for (int i = 0; i < scenes.size(); i++)
 	{
@@ -490,127 +429,15 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks)
-{
-	std::vector<float> fitness;
-
-	fitness.resize(popSize);
-
-	bool validated = false;
-
-	for (int i3 = 0; i3 < GEN && validated == false; i3++)
-	{
-		std::cout << std::endl << "gen " << i3 << std::endl;
-
-		for (int i = 0; i < popSize; i++)
-		{
-			fitness[i] = 0;
-		}
-
-		int threads = 1;
-		ThreadPool* pool = ThreadPool::getInstance();
-		size_t taskLaunched = pool->getTasksTotal();
-		unsigned int cpus = (pool->getThreadPoolSize() >= taskLaunched ? pool->getThreadPoolSize() - taskLaunched : 0);
-
-		float totalWorkload = popSize;
-		float workload = (cpus > 1 ? totalWorkload / cpus : totalWorkload);
-		float restWorkload = 0;
-		int currentWorkload = totalWorkload;
-		int startIndex = 0;
-		int count = 0;
-
-		if (totalWorkload == 1)
-		{
-			cpus = 1;
-		}
-
-		std::deque<std::atomic<bool>> tickets;
-
-#ifdef MULTITHREAD
-		while (workload < 1 && cpus > 2)
-		{
-			cpus--;
-			workload = totalWorkload / cpus;
-		}
-
-		if (workload < 1.f)
-		{
-			cpus = 0;
-		}
-
-		while (cpus > threads)
-		{
-			currentWorkload = floor(workload);
-			float workloadFrac = fmod(workload, 1.0f);
-			restWorkload = workloadFrac;
-
-			tickets.emplace_back(false);
-			pool->queueJob(evaluate, startIndex, currentWorkload + floor(restWorkload), std::ref(fitness), algo, std::ref(outputs), std::ref(inputs), 
-				std::ref(networks), &tickets.back());
-			++threads;
-
-			count += currentWorkload + floor(restWorkload);
-
-			startIndex += currentWorkload + floor(restWorkload);
-
-			restWorkload -= floor(restWorkload);
-			restWorkload += workloadFrac;
-		}
-#endif //MULTITHREAD
-		currentWorkload = totalWorkload - count;
-
-		evaluate(startIndex, currentWorkload, fitness, algo, outputs, inputs, networks);
-
-		for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
-		{
-			itTicket->wait(false);
-		}
-
-		algo->setScore(fitness);
-
-		algo->getGoat()->saveCurrentGenome();
-
-		algo->evolve();
-	}
-
-	std::cout << "done" << std::endl;
-
-	return false;
-}
-
-
-void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks, std::atomic<bool>* ticket)
-{
-	for (int i = startIndex; i < (startIndex + currentWorkload); i++)
-	{
-		fitness[i] = sceneTest(networks, i, outputs, inputs, algo);
-	}
-
-	if (ticket != nullptr)
-	{
-		(*ticket) = true;
-		ticket->notify_one();
-	}
-}
-
-float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vector<glm::vec3>& outputs,
-	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo)
+float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
+	const std::vector<std::vector<bool>>& inputs)
 {
 	std::vector<float> networkOutputs;
-	glm::vec3 normal;
-
 	std::vector<float> inputsFloat;
 
 	inputsFloat.resize(inputs[0].size());
 
 	float score = outputs.size();
-
-	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
-	std::vector<std::vector<float>> outputSubstrate;
-	outputSubstrate.push_back(std::vector<float>());
-	outputSubstrate[0].push_back(0);
 
 	for (int cpt = 0; cpt < outputs.size(); cpt++)
 	{
@@ -619,32 +446,21 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 			inputsFloat[i] = (inputs[cpt][i] == true ? 1 : 0);
 		}
 
-		networks[index].compute(inputsFloat, networkOutputs);
+		network.compute(inputsFloat, networkOutputs);
+
+		//Do test
+		float square = 0;
 
 		for (int axis = 0; axis < 3; axis++)
 		{
-			normal[axis] = networkOutputs[axis];
+			square += pow(networkOutputs[axis] - outputs[cpt][axis], 2);
 		}
 
-		//Do test
-		if (normal.x != 0 || normal.y != 0 || normal.z != 0)
-		{
-			normal = glm::normalize(normal);
-
-			float square = 0;
-
-			for (int axis = 0; axis < 3; axis++)
-			{
-				square += pow(normal[axis] - outputs[cpt][axis], 2);
-			}
-
-			score -= sqrt(square);
-		}
-		else {
-			score -= 1;
-		}
+		score -= sqrt(square);
 
 	}
 
-	return score / 2000.0;
+	std::cout << score << " / " << outputs.size() << std::endl;
+
+	return score;
 }
