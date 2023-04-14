@@ -592,8 +592,6 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 					normal[axis] = outputs[axis];
 				}
 
-				std::cout << normal << std::endl;
-
 				//normal = glm::normalize(normal);
 			}
 

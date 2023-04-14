@@ -28,7 +28,7 @@
 float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs);
 
-//#define LOAD
+#define LOAD
 
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 	Neat::genomeToNetwork(gen, network);
 
 	//Do test
-	int epoch = 100000000;
+	int epoch = 1000000;
 	float lRate = 0.00001;
 
 	unsigned int percent = 0;
@@ -249,8 +249,6 @@ int main(int argc, char *argv[])
 
 #else // LOAD
 	Genome gen = Genome::loadGenome("saveGenome.txt");
-	NeuralNetwork network;
-	Neat::genomeToNetwork(gen, network);
 #endif 
 
 	//applyResult(&network, scenes, renderScene);
@@ -341,6 +339,7 @@ int main(int argc, char *argv[])
 				std::deque<std::atomic<bool>> tickets;
 
 				int x = 0, y = 0;
+				std::vector<NeuralNetwork> networks;
 
 	#ifdef MULTITHREAD
 				while (workload < 1)
@@ -349,14 +348,19 @@ int main(int argc, char *argv[])
 					workload = totalWorkload / cpus;
 				}
 
+				networks.reserve(cpus);
+
 				while (cpus > threads)
 				{
 					currentWorkload = floor(workload);
 					float workloadFrac = fmod(workload, 1.0f);
 					restWorkload = workloadFrac;
 
+					networks.push_back(NeuralNetwork());
+					Neat::genomeToNetwork(gen, networks.back());
+
 					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &network, &tickets.back());
+					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &networks.back(), &tickets.back());
 					++threads;
 
 					x += currentWorkload / windowHeight;
@@ -390,7 +394,10 @@ int main(int argc, char *argv[])
 					count--;
 				}
 
-				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &network);
+				networks.push_back(NeuralNetwork());
+				Neat::genomeToNetwork(gen, networks.back());
+
+				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &networks.back());
 
 				timer = SDL_GetTicks();
 
