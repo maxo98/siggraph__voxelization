@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <fstream>
 
+//#define RENDER
+
 VoxelScene::VoxelScene(int _levels)
 {
 	worldMap.map = new Octree<glm::dvec3>[MAP_WIDTH * MAP_HEIGHT * MAP_DEPTH];
@@ -595,49 +597,54 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				//normal = glm::normalize(normal);
 			}
 
-			bool hitByLight = true;/////////////////////////////////////////////////
+			
 
-			//double mDist = -glm::dot(-normal, hitPos);
+#ifdef RENDER
+			bool hitByLight = false;
+
+			double mDist = -glm::dot(-normal, hitPos);
 
 			//for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
-			//{
-			//	//Check if the on which side of the plane the light is
-			//	if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
-			//	{
-			//		glm::dvec3 filler, filler2;
-			//		Octree<glm::dvec3>* oHitLight = nullptr;
+			{
+				//Check if the on which side of the plane the light is
+				//if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
+				{
+					glm::dvec3 filler, filler2;
+					Octree<glm::dvec3>* oHitLight = nullptr;
 
-			//		rayDir = glm::normalize(hitPos - glm::dvec3(pointLights[i]));
+					rayDir = glm::normalize(hitPos - glm::dvec3(pointLights[0]));
 
-			//		traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
+					traceRay(worldMap, rayDir, pointLights[0], &oHitLight, filler, filler2);
 
-			//		if (octreeHit == oHitLight)
-			//		{
-			//			hitByLight = true;
+					//if (octreeHit == oHitLight)
+					{
+						hitByLight = true;
 
-			//			double ambientStrength = 0.00f;
-			//			glm::dvec3 ambient = lightColor * ambientStrength;
-			//			// diffuse 
-			//			//normal = -normal;
-			//			glm::dvec3 lightDir = glm::normalize(pointLights[i] - hitPos);
-			//			double diff = std::max(glm::dot(normal, lightDir), 0.f);
-			//			glm::dvec3 diffuse = lightColor * diff;
-			//			// specular
-			//			double specularStrength = 0.15;
-			//			glm::dvec3 viewDir = glm::normalize(camera.pos - hitPos);
-			//			glm::dvec3 reflectDir = reflect(-lightDir, normal);
-			//			double spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
-			//			glm::dvec3 specular = lightColor * specularStrength * spec;
-			//			glm::dvec3 result = (ambient + diffuse) * color + specular;
+						double ambientStrength = 0.00f;
+						glm::dvec3 ambient = lightColor * ambientStrength;
+						// diffuse 
+						//normal = -normal;
+						glm::dvec3 lightDir = glm::normalize(pointLights[0] - hitPos);
+						double diff = std::max(glm::dot(normal, lightDir), 0.0);
+						glm::dvec3 diffuse = lightColor * diff;
+						// specular
+						double specularStrength = 0.15;
+						glm::dvec3 viewDir = glm::normalize(glm::dvec3(camera.pos) - hitPos);
+						glm::dvec3 reflectDir = reflect(-lightDir, normal);
+						double spec = pow(std::max(dot(viewDir, reflectDir), 0.0), 32.0);
+						glm::dvec3 specular = lightColor * specularStrength * spec;
+						glm::dvec3 result = (ambient + diffuse) * color + specular;
 
-			//			buffer[x][y] = glm::min(result, glm::dvec3(1.f));
-			//			//buffer[x][y] = abs(normal);
-			//			//buffer[x][y] = color;
-			//		}
-			//	}
-			//}
-
+						buffer[x][y] = glm::min(result, glm::dvec3(1.f));
+						//buffer[x][y] = abs(normal);
+						//buffer[x][y] = color;
+					}
+				}
+			}
+#else
+			bool hitByLight = true;
 			buffer[x][y] = abs(normal);
+#endif // RENDER
 
 			if (hitByLight == false)
 			{
