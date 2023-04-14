@@ -28,7 +28,7 @@
 float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs);
 
-#define LOAD
+//#define LOAD
 
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 
 		for (int i = 0; i < inputsFloat.size(); i++)
 		{
-			inputsFloat[i] = (inputs[index][i] == true ? 1 : 0);
+			inputsFloat[i] = (inputs[index][i] == true ? 1 : -1);
 		}
 
 		network.backprop(inputsFloat, outputs[index], lRate, true);
