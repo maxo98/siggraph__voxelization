@@ -18,7 +18,7 @@
 
 #define MULTITHREAD
 
-#define RADIUS 4
+#define RADIUS 10
 
 #define OCTSIZE 0.00390625
 
@@ -208,8 +208,8 @@ int main(int argc, char *argv[])
 	Neat::genomeToNetwork(gen, network);
 
 	//Do test
-	int epoch = 1000000;
-	float lRate = 0.00001;
+	int epoch = 100000000;
+	float lRate = 0.0000005;
 
 	unsigned int percent = 0;
 	unsigned int div = epoch / 100.f;
