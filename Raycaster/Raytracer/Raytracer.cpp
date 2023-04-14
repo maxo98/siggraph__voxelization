@@ -17,7 +17,7 @@
 
 #define MULTITHREAD
 
-#define RADIUS 7
+#define RADIUS 10
 
 #define OCTSIZE 0.00390625
 
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
 	hyperneatParam.activationFunction = new LinearActivation();
 	hyperneatParam.cppnInput = 6;
-	hyperneatParam.cppnInputFunction = biasCppnInput;
+	hyperneatParam.cppnInputFunction = basicCppnInput;
 	hyperneatParam.cppnOutput = 1;
 	hyperneatParam.nDimensions = 1;
 	hyperneatParam.thresholdFunction = noThreshold;
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
 	int result = 0;
 	int count = 0;
 
-	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::FULL);
+	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::ONE);
 
 	//Set node location
 	std::vector<std::vector<bool>> inputs;
@@ -616,7 +616,7 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 	{
 		for (int i = 0; i < inputsFloat.size(); i++)
 		{
-			inputsFloat[i] = (inputs[cpt][i] == true ? 1 : 0);
+			inputsFloat[i] = (inputs[cpt][i] == true ? 1 : -1);
 		}
 
 		networks[index].compute(inputsFloat, networkOutputs);
