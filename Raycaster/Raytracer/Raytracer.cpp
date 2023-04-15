@@ -32,7 +32,7 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
-#define LOAD
+//#define LOAD
 
 std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -610,7 +610,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 	inputsFloat.resize(inputs[0].size());
 
-	float score = outputs.size();
+	float score = outputs.size() * 5;
 
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
@@ -631,7 +631,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 		}
 
 		//Do test
-		normal = glm::normalize(normal);
+		//normal = glm::normalize(normal);
 
 		float square = 0;
 
@@ -643,5 +643,10 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 		score -= sqrt(square);
 	}
 
-	return score / 2000.0;
+	if (score <= 0)
+	{
+		score = 1;
+	}
+
+	return score / 10000.0;
 }
