@@ -162,9 +162,9 @@ int main(int argc, char *argv[])
 
 	std::cout << in << " - " << out << std::endl;
 
-#ifndef LOAD
-
 	NeuralNetwork network;
+
+#ifndef LOAD
 
 	std::vector<Activation*> arrActiv;
 	Activation* tanh = new TanhActivation();
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 
 		for (int i = 0; i < inputsFloat.size(); i++)
 		{
-			inputsFloat[i] = (inputs[index][i] == true ? 1 : -1);
+			inputsFloat[i] = (inputs[index][i] == true ? 1 : 0);
 		}
 
 		network.backprop(inputsFloat, outputs[index], lRate, true);
@@ -249,7 +249,11 @@ int main(int argc, char *argv[])
 
 #else // LOAD
 	Genome gen = Genome::loadGenome("saveGenome.txt");
+
+	Neat::genomeToNetwork(gen, network);
 #endif 
+
+	sceneTest(network, outputs, inputs);
 
 	//applyResult(&network, scenes, renderScene);
 
@@ -442,7 +446,9 @@ float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& ou
 	std::vector<float> networkOutputs;
 	std::vector<float> inputsFloat;
 
-	inputsFloat.resize(inputs[0].size());
+	inputsFloat.resize(inputs[0].size() + 1);
+	inputsFloat.back() = 0.5;
+
 
 	float score = outputs.size();
 
