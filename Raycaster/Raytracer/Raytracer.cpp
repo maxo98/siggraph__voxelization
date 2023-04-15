@@ -201,9 +201,7 @@ int main(int argc, char *argv[])
 
 	nInputs++;//Bias
 
-	Genome gen(nInputs, 3, arrActiv);
-
-	gen.fullyConnect(2, 40, tanh, linear, allConn, xavierUniformInit, seed);
+	Genome gen = Genome::loadGenome("saveGenome.txt");
 
 	Neat::genomeToNetwork(gen, network);
 
@@ -231,7 +229,7 @@ int main(int argc, char *argv[])
 
 		for (int i = 0; i < inputsFloat.size(); i++)
 		{
-			inputsFloat[i] = (inputs[index][i] == true ? 1 : -1);
+			inputsFloat[i] = (inputs[index][i] == true ? 1 : 0);
 		}
 
 		network.backprop(inputsFloat, outputs[index], lRate, true);
