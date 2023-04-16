@@ -50,6 +50,7 @@ public:
 	void splitBackpropThread(std::deque<Node>::iterator it, int size, const float& learnRate, const std::vector<float>* outputs = nullptr);
 	void backpropThread(int workload, int startIndex, std::deque<Node>::iterator it, const float& learnRate, const std::vector<float>* outputs = nullptr, std::atomic<bool>* ticket = nullptr);
 	void applyBackprop(Genome& gen);
+	void createGenome(Genome& gen);
 
 	void clear();
 	void clearConnections();
