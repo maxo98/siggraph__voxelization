@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 	hyperneatParam.thresholdFunction = noThreshold;
 	hyperneatParam.weightModifierFunction = noChangeWeight;
 
-	int popSize = 150;
+	int popSize = 300;
 	int result = 0;
 	int count = 0;
 
@@ -643,7 +643,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 	inputsFloat.resize(inputs[0].size());
 
-	float score = outputs.size() * 5;
+	float score = outputs.size()*100;
 
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
@@ -666,17 +666,23 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 		//Do test
 		//normal = glm::normalize(normal);
 
-		float square = 0;
-
-		for (int axis = 0; axis < 3; axis++)
+		if (normal[0] != 0 || normal[1] != 0 || normal[2] != 0)
 		{
-			square += pow(normal[axis] - outputs[cpt][axis], 2);
-		}
+			float square = 0;
 
-		score -= sqrt(square);
+			for (int axis = 0; axis < 3; axis++)
+			{
+				square += pow(normal[axis] - outputs[cpt][axis], 2);
+			}
+
+			score -= sqrt(square);
+		}
+		else {
+			score-= 100;
+		}
 	}
 
-	if (score <= 0)
+	if (score < 1)
 	{
 		score = 1;
 	}
