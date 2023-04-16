@@ -574,7 +574,40 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 		algo->setScore(fitness);
 
-		algo->getGoat()->saveCurrentGenome();
+		int bestIndex = 0;
+		float bestScore = fitness[0];
+
+		for (int i = 1; i < popSize; i++)
+		{
+			if (fitness[i] > bestScore)
+			{
+				bestIndex = i;
+				bestScore = fitness[i];
+			}
+		}
+
+		for (int axis = 0; axis < 3; axis++)
+		{
+			Genome gen;
+
+			networks[axis][bestIndex].createGenome(gen);
+			
+			std::string str = "";
+
+			if (axis == 0)
+			{
+				str = "genX";
+			}
+			else if (axis == 1)
+			{
+				str = "genY";
+			}
+			else {
+				str = "genZ";
+			}
+			
+			gen.saveCurrentGenome(str);
+		}
 
 		algo->evolve();
 	}
@@ -648,5 +681,5 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 		score = 1;
 	}
 
-	return score / 10000.0;
+	return score;
 }

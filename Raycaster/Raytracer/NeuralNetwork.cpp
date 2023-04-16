@@ -586,3 +586,63 @@ void NeuralNetwork::applyBackprop(Genome& gen)
         }
     }
 }
+
+void NeuralNetwork::createGenome(Genome& gen)
+{
+    std::unordered_map<Node*, unsigned int> nodesMap;
+    std::unordered_map<std::pair<unsigned int, unsigned int>, unsigned int> allConnections;
+
+    int idCounter = 0;
+
+    for(std::deque<Node>::iterator it = inputNodes.begin(); it != inputNodes.end(); ++it)
+    {
+        nodesMap.emplace(&*it, idCounter);
+        idCounter++;
+        gen.getNodes()->push_back(GeneNode(NODE_TYPE::INPUT, it->activation));
+
+    }
+
+    for (std::deque<Node>::iterator it = outputNodes.begin(); it != outputNodes.end(); ++it)
+    {
+        nodesMap.emplace(&*it, idCounter);
+        idCounter++;
+        gen.getNodes()->push_back(GeneNode(NODE_TYPE::OUTPUT, it->activation, 999999));
+    }
+
+    int layer = 1;
+
+    for (std::deque<std::deque<Node>>::iterator itLayer = hiddenNodes.begin(); itLayer != hiddenNodes.end(); ++itLayer, ++layer)
+    {
+        for (std::deque<Node>::iterator itNode = itLayer->begin(); itNode != itLayer->end(); ++itNode)
+        {
+            nodesMap.emplace(&*itNode, idCounter);
+            idCounter++;
+            gen.getNodes()->push_back(GeneNode(NODE_TYPE::HIDDEN, itNode->activation, layer));
+        }
+    }
+
+    for (std::deque<Node>::iterator it = outputNodes.begin(); it != outputNodes.end(); ++it)
+    {
+        for (int i = 0; i < it->previousNodes.size(); i++)
+        {
+            gen.addConnection(nodesMap[it->previousNodes[i].first], nodesMap[&*it], allConnections, it->previousNodes[i].second);
+        }
+    }
+
+    for (std::deque<std::deque<Node>>::iterator itLayer = hiddenNodes.begin(); itLayer != hiddenNodes.end(); ++itLayer, ++layer)
+    {
+        for (std::deque<Node>::iterator itNode = itLayer->begin(); itNode != itLayer->end(); ++itNode)
+        {
+            nodesMap.emplace(&*itNode, idCounter);
+            idCounter++;
+            gen.getNodes()->push_back(GeneNode(NODE_TYPE::HIDDEN, itNode->activation, layer));
+
+            for (int i = 0; i < itNode->previousNodes.size(); i++)
+            {
+                gen.addConnection(nodesMap[itNode->previousNodes[i].first], nodesMap[&*itNode], allConnections, itNode->previousNodes[i].second);
+            }
+        }
+    }
+
+    gen.setInputOuput(inputNodes.size(), outputNodes.size());
+}
