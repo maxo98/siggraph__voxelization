@@ -25,10 +25,10 @@
 #define GEN 50
 
 
-float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
+float sceneTest(std::vector<NeuralNetwork>& networks, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs);
 
-//#define LOAD
+#define LOAD
 
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
@@ -126,7 +126,12 @@ int main(int argc, char *argv[])
 
 	//Set node location
 	std::vector<std::vector<bool>> inputs;
-	std::vector<std::vector<float>> outputs;
+	std::vector<std::vector<std::vector<float>>> outputs;
+
+	for (int axis = 0; axis < 3; axis++)
+	{
+		outputs.push_back(std::vector<std::vector<float>>());
+	}
 
 	int w;
 	int h;
@@ -149,11 +154,10 @@ int main(int argc, char *argv[])
 						*(dataValue + (x + w * y) * comp + 1) * (*(dataSign + (x + w * y) * comp + 1) > 0 ? 1 : -1),
 						*(dataValue + (x + w * y) * comp + 2) * (*(dataSign + (x + w * y) * comp + 2) > 0 ? 1 : -1)));
 
-					outputs.push_back(std::vector<float>());
-
 					for (int axis = 0; axis < 3; axis++)
 					{
-						outputs.back().push_back(normal[axis]);
+						outputs[axis].push_back(std::vector<float>());
+						outputs[axis].back().push_back(normal[axis]);
 					}
 				}
 			}
@@ -164,7 +168,7 @@ int main(int argc, char *argv[])
 
 #ifndef LOAD
 
-	NeuralNetwork network;
+	std::vector<NeuralNetwork> networks;
 
 	std::vector<Activation*> arrActiv;
 	Activation* tanh = new TanhActivation();
@@ -199,15 +203,22 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	nInputs++;//Bias
+	std::vector<Genome> gen;
+	gen.reserve(3);
+	gen.push_back(Genome::loadGenome("genX"));
+	gen.push_back(Genome::loadGenome("genY"));
+	gen.push_back(Genome::loadGenome("genZ"));
 
-	Genome gen = Genome::loadGenome("saveGenome.txt");
+	networks.resize(3);
 
-	Neat::genomeToNetwork(gen, network);
-
+	for (int axis = 0; axis < 3; axis++)
+	{
+		Neat::genomeToNetwork(gen[axis], networks[axis]);
+	}
+	
 	//Do test
-	int epoch = 100000000;
-	float lRate = 0.0000005;
+	int epoch = 1000000;
+	float lRate = 0.00005;
 
 	unsigned int percent = 0;
 	unsigned int div = epoch / 100.f;
@@ -219,9 +230,7 @@ int main(int argc, char *argv[])
 	std::cout << "Progress: " << percent << "%" << std::endl;
 
 	std::vector<float> inputsFloat;
-	inputsFloat.resize(inputs[0].size()+1);
-
-	inputsFloat.back() = 0.5;
+	inputsFloat.resize(inputs[0].size());
 
 	for (int i = 0; i < epoch; i++)
 	{
@@ -232,7 +241,10 @@ int main(int argc, char *argv[])
 			inputsFloat[i] = (inputs[index][i] == true ? 1 : 0);
 		}
 
-		network.backprop(inputsFloat, outputs[index], lRate, true);
+		for (int axis = 0; axis < 3; axis++)
+		{
+			networks[axis].backprop(inputsFloat, outputs[axis][index], lRate, true);
+		}
 
 		if ((i + 1) % div == 0)
 		{
@@ -242,11 +254,34 @@ int main(int argc, char *argv[])
 	}
 
 	//Save
-	network.applyBackprop(gen);
-	gen.saveCurrentGenome("saveGenome.txt");
+	for (int axis = 0; axis < 3; axis++)
+	{
+		networks[axis].applyBackprop(gen[axis]);
+
+		std::string str = "";
+
+		if (axis == 0)
+		{
+			str = "genIdX";
+		}
+		else if (axis == 1)
+		{
+			str = "genIdY";
+		}
+		else {
+			str = "genIdZ";
+		}
+
+		gen[axis].saveCurrentGenome(str);
+	}
+
 
 #else // LOAD
-	Genome gen = Genome::loadGenome("saveGenome.txt");
+	std::vector<Genome> gen;
+	gen.reserve(3);
+	gen.push_back(Genome::loadGenome("genIdX"));
+	gen.push_back(Genome::loadGenome("genIdY"));
+	gen.push_back(Genome::loadGenome("genIdZ"));
 #endif 
 
 	//applyResult(&network, scenes, renderScene);
@@ -337,7 +372,7 @@ int main(int argc, char *argv[])
 				std::deque<std::atomic<bool>> tickets;
 
 				int x = 0, y = 0;
-				std::vector<NeuralNetwork> networks;
+				std::vector<std::vector<NeuralNetwork>> networksRendering;
 
 	#ifdef MULTITHREAD
 				while (workload < 1)
@@ -346,7 +381,7 @@ int main(int argc, char *argv[])
 					workload = totalWorkload / cpus;
 				}
 
-				networks.reserve(cpus);
+				networksRendering.reserve(cpus);
 
 				while (cpus > threads)
 				{
@@ -354,11 +389,17 @@ int main(int argc, char *argv[])
 					float workloadFrac = fmod(workload, 1.0f);
 					restWorkload = workloadFrac;
 
-					networks.push_back(NeuralNetwork());
-					Neat::genomeToNetwork(gen, networks.back());
+					networksRendering.push_back(std::vector<NeuralNetwork>());
+					networksRendering.back().reserve(3);
 
+					for (int axis = 0; axis < 3; axis++)
+					{
+						networksRendering.back().push_back(NeuralNetwork());
+						Neat::genomeToNetwork(gen[axis], networksRendering.back().back());
+					}
+					
 					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &networks.back(), &tickets.back());
+					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &networksRendering.back(), &tickets.back());
 					++threads;
 
 					x += currentWorkload / windowHeight;
@@ -392,10 +433,15 @@ int main(int argc, char *argv[])
 					count--;
 				}
 
-				networks.push_back(NeuralNetwork());
-				Neat::genomeToNetwork(gen, networks.back());
+				networksRendering.push_back(std::vector<NeuralNetwork>());
 
-				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &networks.back());
+				for (int axis = 0; axis < 3; axis++)
+				{
+					networksRendering.back().push_back(NeuralNetwork());
+					Neat::genomeToNetwork(gen[axis], networksRendering.back().back());
+				}
+
+				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &networksRendering.back());
 
 				timer = SDL_GetTicks();
 
@@ -434,7 +480,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
+float sceneTest(std::vector<NeuralNetwork>& networks, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs)
 {
 	std::vector<float> networkOutputs;
@@ -444,6 +490,8 @@ float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& ou
 
 	float score = outputs.size();
 
+	glm::vec3 normal;
+
 	for (int cpt = 0; cpt < outputs.size(); cpt++)
 	{
 		for (int i = 0; i < inputsFloat.size(); i++)
@@ -451,14 +499,18 @@ float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& ou
 			inputsFloat[i] = (inputs[cpt][i] == true ? 1 : 0);
 		}
 
-		network.compute(inputsFloat, networkOutputs);
-
+		for (int axis = 0; axis < 3; axis++)
+		{
+			networks[axis].compute(inputsFloat, networkOutputs);
+			normal[axis] = networkOutputs[0];
+		}
+		
 		//Do test
 		float square = 0;
 
 		for (int axis = 0; axis < 3; axis++)
 		{
-			square += pow(networkOutputs[axis] - outputs[cpt][axis], 2);
+			square += pow(normal[axis] - outputs[cpt][axis], 2);
 		}
 
 		score -= sqrt(square);

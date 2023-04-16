@@ -527,7 +527,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::dvec3& rayDir, const glm::dv
 }
 
 void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer,
-	double octSize, int radius, NeuralNetwork* network, std::atomic<bool>* ticket)
+	double octSize, int radius, std::vector<NeuralNetwork>* networks, std::atomic<bool>* ticket)
 {
 	for (int i = 0; i < workload; i++)
 	{
@@ -546,7 +546,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 		{
 			color = *octreeHit->object;
 
-			if (network != nullptr)
+			if (networks != nullptr)
 			{
 				std::vector<float> inputs;
 				std::vector<float> outputs;
@@ -585,13 +585,14 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 					}
 				}
 
-				inputs.push_back(0.5);
+				//inputs.push_back(0.5);
 
-				network->compute(inputs, outputs);
+				
 
 				for (int axis = 0; axis < 3; axis++)
 				{
-					normal[axis] = outputs[axis];
+					(*networks)[axis].compute(inputs, outputs);
+					normal[axis] = outputs[0];
 				}
 
 				//normal = glm::normalize(normal);
