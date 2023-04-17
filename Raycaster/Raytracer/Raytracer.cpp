@@ -17,11 +17,13 @@
 
 #define MULTITHREAD
 
-#define RADIUS 10
+#define RADIUS 5
 
 #define OCTSIZE 0.00390625
 
 #define GEN 50
+
+//#define LOAD
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks);
@@ -32,7 +34,38 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
-//#define LOAD
+void generateLayer(std::vector<std::vector<float>>& layer, float radius);
+
+bool thresholdConv(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
+{
+	for (int axis = 0; axis < 3; axis++)
+	{
+		if (abs(p1[axis] - p2[axis]) > 1)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+std::vector<float> inputConv(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
+{
+	return p1;
+}
+
+float weightConv(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
+{
+	for (int axis = 0; axis < 3; axis++)
+	{
+		if (p2[axis] == 1)
+		{
+			return values[axis];
+		}
+	}
+
+	return 0;
+}
 
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
@@ -168,12 +201,12 @@ int main(int argc, char *argv[])
 	neatparam.pbMutateOnly = 0.25;
 	neatparam.pbMateOnly = 0.2;
 
-	neatparam.speciationDistance = 3.0;
+	neatparam.speciationDistance = 2.0;
 
 
 	neatparam.speciationDistanceMod = 0.3;
-	neatparam.minExpectedSpecies = 4;
-	neatparam.maxExpectedSpecies = 8;
+	neatparam.minExpectedSpecies = 8;
+	neatparam.maxExpectedSpecies = 32;
 	neatparam.adaptSpeciation = true;
 
 	neatparam.keepChamp = true;
@@ -183,14 +216,19 @@ int main(int argc, char *argv[])
 	HyperneatParameters hyperneatParam;
 
 	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput = 6;
-	hyperneatParam.cppnInputFunction = basicCppnInput;
-	hyperneatParam.cppnOutput = 1;
+	hyperneatParam.cppnInput.push_back(3);
+	hyperneatParam.cppnInput.push_back(3);
+	hyperneatParam.cppnInputFunction.push_back(inputConv);
+	hyperneatParam.cppnInputFunction.push_back(inputConv);
+	hyperneatParam.cppnOutput.push_back(1);
+	hyperneatParam.cppnOutput.push_back(3);
 	hyperneatParam.nDimensions = 1;
-	hyperneatParam.thresholdFunction = noThreshold;
-	hyperneatParam.weightModifierFunction = noChangeWeight;
+	hyperneatParam.thresholdFunction.push_back(thresholdConv);
+	hyperneatParam.thresholdFunction.push_back(noThreshold);
+	hyperneatParam.weightModifierFunction.push_back(noChangeWeight);
+	hyperneatParam.weightModifierFunction.push_back(weightConv);
 
-	int popSize = 300;
+	int popSize = 100;
 	int result = 0;
 	int count = 0;
 
@@ -227,8 +265,6 @@ int main(int argc, char *argv[])
 
 	std::cout << in << " - " << out << std::endl;
 
-#ifndef LOAD
-
 	std::vector<std::vector<float>> inputSubstrate;
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
@@ -247,40 +283,15 @@ int main(int argc, char *argv[])
 	outputSubstrate[2].push_back(0);
 	outputSubstrate[2].push_back(1);
 
-	glm::dvec3 inputNetwork;
-	glm::dvec3 pointPos;
+	generateLayer(inputSubstrate, RADIUS);
 
-	double maxDistPlus = (RADIUS + 1) * OCTSIZE;
-	double maxDist = RADIUS * OCTSIZE;
-
-	for (double x = -RADIUS; x <= RADIUS; x++)
+	for (int i = (RADIUS - 1); i > 0; i--)
 	{
-		inputNetwork.x = (1 - abs(x * OCTSIZE) / maxDistPlus) * (x < 0 ? -1 : 1);
-		pointPos.x = x * OCTSIZE;
-
-		for (double y = -RADIUS; y <= RADIUS; y++)
-		{
-			inputNetwork.y = (1 - abs(y * OCTSIZE) / maxDistPlus) * (y < 0 ? -1 : 1);
-			pointPos.y = y * OCTSIZE;
-
-			for (double z = -RADIUS; z <= RADIUS; z++)
-			{
-				inputNetwork.z = (1 - abs(z * OCTSIZE) / maxDistPlus) * (z < 0 ? -1 : 1);
-				pointPos.z = z * OCTSIZE;
-
-				if (maxDist >= glm::length(pointPos))
-				{
-					inputSubstrate.push_back(std::vector<float>());
-
-					for (int axis = 0; axis < 3; axis++)
-					{
-						inputSubstrate.back().push_back(inputNetwork[axis]);
-					}
-				}
-			}
-		}
+		hiddenSubstrate.push_back(std::vector<std::vector<float>>());
+		generateLayer(hiddenSubstrate.back(), i);
 	}
 
+#ifndef LOAD
 	//std::cout << glm::normalize(test) << std::endl;
 
 	//CPPNS
@@ -302,14 +313,17 @@ int main(int argc, char *argv[])
 #endif // !LOAD
 
 	//Apply to check result
-	Genome* genP;
+	std::vector<Genome*> genP;
 
 #ifndef LOAD
-	genP = hyper.getGoat();
+	genP.push_back(hyper.getGoat(0));
+	genP.push_back(hyper.getGoat(1));
 #else
-	Genome gen = Genome::loadGenome("saveGenome.txt");
+	Genome gen1 = Genome::loadGenome("Gen1");
+	Genome gen2 = Genome::loadGenome("Gen2");
 
-	genP = &gen;
+	genP.push_back(&gen1);
+	genP.push_back(&gen2);
 #endif // !LOAD
 
 	//applyResult(&network, scenes, renderScene);
@@ -400,6 +414,7 @@ int main(int argc, char *argv[])
 				std::deque<std::atomic<bool>> tickets;
 
 				int x = 0, y = 0;
+				std::vector<NeuralNetwork> renderNetworks;
 
 	#ifdef MULTITHREAD
 				while (workload < 1)
@@ -408,14 +423,20 @@ int main(int argc, char *argv[])
 					workload = totalWorkload / cpus;
 				}
 
+				renderNetworks.reserve(cpus);
+
 				while (cpus > threads)
 				{
 					currentWorkload = floor(workload);
 					float workloadFrac = fmod(workload, 1.0f);
 					restWorkload = workloadFrac;
 
+					renderNetworks.push_back(NeuralNetwork());
+
+					hyper.genomeToNetwork(genP, renderNetworks.back(), inputSubstrate, outputSubstrate, hiddenSubstrate);
+
 					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyper, genP, &tickets.back());
+					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyper, &renderNetworks.back(), &tickets.back());
 					++threads;
 
 					x += currentWorkload / windowHeight;
@@ -449,7 +470,7 @@ int main(int argc, char *argv[])
 					count--;
 				}
 
-				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &hyper, genP);
+				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &hyper, &renderNetworks.back());
 
 				timer = SDL_GetTicks();
 
@@ -569,7 +590,8 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 
 		algo->setScore(fitness);
 
-		algo->getGoat()->saveCurrentGenome();
+		algo->getGoat(0)->saveCurrentGenome("Gen1");
+		algo->getGoat(1)->saveCurrentGenome("Gen2");
 
 		algo->evolve();
 	}
@@ -647,4 +669,31 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 	}
 
 	return score / 2000.0;
+}
+
+void generateLayer(std::vector<std::vector<float>>& layer, float radius)
+{
+	glm::dvec3 inputNetwork;
+
+	for (double x = -radius; x <= radius; x++)
+	{
+		inputNetwork.x = x;
+
+		for (double y = -radius; y <= radius; y++)
+		{
+			inputNetwork.y = y;
+
+			for (double z = -radius; z <= radius; z++)
+			{
+				inputNetwork.z = z;
+
+				layer.push_back(std::vector<float>());
+
+				for (int axis = 0; axis < 3; axis++)
+				{
+					layer.back().push_back(inputNetwork[axis]);
+				}
+			}
+		}
+	}
 }

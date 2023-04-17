@@ -41,7 +41,7 @@ public:
 	bool loadModel(glm::dvec3 pos, std::string file);
 	
 	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, 
-		double octSize, int radius, Hyperneat* hyperneat = nullptr, Genome* gen = nullptr, std::atomic<bool>* ticket = nullptr);
+		double octSize, int radius, Hyperneat* hyperneat = nullptr, NeuralNetwork* network = nullptr, std::atomic<bool>* ticket = nullptr);
 
 	//Octree traveral
 	uint8_t firstNode(glm::dvec3 t0, glm::dvec3 tm, double& t);

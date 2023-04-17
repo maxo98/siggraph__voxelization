@@ -525,7 +525,7 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::dvec3& rayDir, const glm::dv
 }
 
 void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, 
-	double octSize, int radius, Hyperneat* hyperneat, Genome* gen, std::atomic<bool>* ticket)
+	double octSize, int radius, Hyperneat* hyperneat, NeuralNetwork* network, std::atomic<bool>* ticket)
 {
 	for (int i = 0; i < workload; i++)
 	{
@@ -552,7 +552,6 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				glm::dvec3 colorHolder;
 				glm::dvec3 readPos;
 				glm::dvec3 inputNetwork;
-				glm::dvec3 pointPos;
 
 				std::vector<std::vector<float>> inputsPos;
 
@@ -563,56 +562,31 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				{
 					readPos.x = hitPos.x + x * octSize;
 					inputNetwork.x = (1 - abs(x * octSize) / maxDistPlus) * (x < 0 ? 1 : -1);
-					pointPos.x = x * octSize;
 
 					for (double y = -radius; y <= radius; y++)
 					{
 						readPos.y = hitPos.y + y * octSize;
 						inputNetwork.y = (1 - abs(y * octSize) / maxDistPlus) * (y < 0 ? 1 : -1);
-						pointPos.y = y * octSize;
 
 						for (double z = -radius; z <= radius; z++)
 						{
 							readPos.z = hitPos.z + z * octSize;
 							inputNetwork.z = (1 - abs(z * octSize) / maxDistPlus) * (z < 0 ? 1 : -1);
-							pointPos.z = z * octSize;
 
-							if (maxDist >= glm::length(pointPos))
+							inputsPos.push_back(std::vector<float>());
+
+							for (int axis = 0; axis < 3; axis++)
 							{
-								inputsPos.push_back(std::vector<float>());
-
-								for (int axis = 0; axis < 3; axis++)
-								{
 									
-									inputsPos.back().push_back(inputNetwork[axis]);
-								}
-
-								inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
+								inputsPos.back().push_back(inputNetwork[axis]);
 							}
+
+							inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
 						}
 					}
 				}
 
-				std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
-				std::vector<std::vector<float>> outputSubstrate;
-				outputSubstrate.push_back(std::vector<float>());
-				outputSubstrate.push_back(std::vector<float>());
-				outputSubstrate.push_back(std::vector<float>());
-				outputSubstrate[0].push_back(1);
-				outputSubstrate[0].push_back(0);
-				outputSubstrate[0].push_back(0);
-
-				outputSubstrate[1].push_back(0);
-				outputSubstrate[1].push_back(1);
-				outputSubstrate[1].push_back(0);
-
-				outputSubstrate[2].push_back(0);
-				outputSubstrate[2].push_back(0);
-				outputSubstrate[2].push_back(1);
-
-				NeuralNetwork network;
-				hyperneat->genomeToNetwork(*gen, network, inputsPos, outputSubstrate, hiddenSubstrate);
-				network.compute(inputs, outputs);
+				network->compute(inputs, outputs);
 
 				for (int axis = 0; axis < 3; axis++)
 				{
@@ -714,7 +688,6 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 		glm::dvec3 colorHolder;
 		glm::dvec3 readPos;
 		glm::dvec3 inputNetwork;
-		glm::dvec3 pointPos;
 
 		double maxDistPlus = (radius + 1) * octSize;
 		double maxDist = radius * octSize;
@@ -725,38 +698,32 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 		{
 			readPos.x = hitPos.x + x * octSize;
 			inputNetwork.x = (1 - abs(x * octSize) / maxDistPlus) * (x < 0 ? 1 : -1);
-			pointPos.x = x * octSize;
 
 			for (double y = -radius; y <= radius; y++)
 			{
 				readPos.y = hitPos.y + y * octSize;
 				inputNetwork.y = (1 - abs(y * octSize) / maxDistPlus) * (y < 0 ? 1 : -1);
-				pointPos.y = y * octSize;
 
 				for (double z = -radius; z <= radius; z++)
 				{
 					readPos.z = hitPos.z + z * octSize;
 					inputNetwork.z = (1 - abs(z * octSize) / maxDistPlus) * (z < 0 ? 1 : -1);
-					pointPos.z = z * octSize;
 
-					if (maxDist >= glm::length(pointPos))
+					inputs.back().push_back(readPoint(readPos, colorHolder, levels));
+
+					if (inputs.back().back() == true)
 					{
-						inputs.back().push_back(readPoint(readPos, colorHolder, levels));
+						test += inputNetwork;
+					}
 
+					if (z == 0 && x == 0 && y == 0)
+					{
 						if (inputs.back().back() == true)
 						{
-							test += inputNetwork;
+							in++;
 						}
-
-						if (z == 0 && x == 0 && y == 0)
-						{
-							if (inputs.back().back() == true)
-							{
-								in++;
-							}
-							else {
-								out++;
-							}
+						else {
+							out++;
 						}
 					}
 				}
