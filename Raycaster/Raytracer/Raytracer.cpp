@@ -25,7 +25,7 @@
 #define GEN 50
 
 
-float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
+float sceneTest(NeuralNetwork& network, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs);
 
 //#define LOAD
@@ -440,7 +440,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-float sceneTest(NeuralNetwork network, const std::vector<std::vector<float>>& outputs,
+float sceneTest(NeuralNetwork& network, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs)
 {
 	std::vector<float> networkOutputs;
