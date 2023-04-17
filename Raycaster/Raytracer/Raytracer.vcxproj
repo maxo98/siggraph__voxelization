@@ -26,7 +26,6 @@
     <ClCompile Include="GeneConnection.cpp" />
     <ClCompile Include="GeneNode.cpp" />
     <ClCompile Include="Genome.cpp" />
-    <ClCompile Include="HyperBackprop.cpp" />
     <ClCompile Include="Hyperneat.cpp" />
     <ClCompile Include="Neat.cpp" />
     <ClCompile Include="NeuralNetwork.cpp" />
@@ -46,7 +45,6 @@
     <ClInclude Include="GeneConnection.h" />
     <ClInclude Include="GeneNode.h" />
     <ClInclude Include="Genome.h" />
-    <ClInclude Include="HyperBackprop.h" />
     <ClInclude Include="Hyperneat.h" />
     <ClInclude Include="Neat.h" />
     <ClInclude Include="NeuralNetwork.h" />

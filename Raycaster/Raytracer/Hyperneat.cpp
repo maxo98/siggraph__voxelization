@@ -8,8 +8,11 @@ Hyperneat::Hyperneat(unsigned int _populationSize, const NeatParameters& _neatPa
 {
 	hyperParam = _hyperParam;
 
-	cppns = new CPPN_Neat(_populationSize, hyperParam.cppnInput, hyperParam.cppnOutput, _neatParam, init);
-
+	for (int i = 0; i < hyperParam.cppnInput.size(); i++)
+	{
+		cppns.push_back(new CPPN_Neat(_populationSize, hyperParam.cppnInput[i], hyperParam.cppnOutput[i], _neatParam, init));
+	}
+	
 	networks.resize(_populationSize);
 }
 
@@ -17,14 +20,20 @@ Hyperneat::Hyperneat(unsigned int _populationSize, const NeatParameters& _neatPa
 {
 	hyperParam = _hyperParam;
 
-	cppns = new CPPN_Neat(_populationSize, hyperParam.cppnInput, hyperParam.cppnOutput, _neatParam, initPop);
+	for (int i = 0; i < hyperParam.cppnInput.size(); i++)
+	{
+		cppns.push_back(new CPPN_Neat(_populationSize, hyperParam.cppnInput[i], hyperParam.cppnOutput[i], _neatParam, initPop));
+	}
 
 	networks.resize(_populationSize);
 }
 
 Hyperneat::~Hyperneat()
 {
-	delete cppns;
+	for (int i = 0; i < cppns.size(); i++)
+	{
+		delete cppns[i];
+	}
 }
 
 void Hyperneat::addInput(const std::vector<float>& node)
@@ -78,14 +87,14 @@ void Hyperneat::generateNetworks()
 void Hyperneat::generateNetworks(std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate,
 	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
 {
-	networks.resize(cppns->getPopSize());
+	networks.resize(cppns[0]->getPopSize());
 	
 	int threads = 1;
 	ThreadPool* pool = ThreadPool::getInstance();
 	size_t taskLaunched = pool->getTasksTotal();
 	unsigned int cpus = (pool->getThreadPoolSize() >= taskLaunched ? pool->getThreadPoolSize() - taskLaunched : 0);
 
-	float totalWorkload = cppns->getPopSize();
+	float totalWorkload = cppns[0]->getPopSize();
 	float workload = (cpus > 1 ? totalWorkload / cpus : totalWorkload);
 	float restWorkload = 0;
 	int currentWorkload = totalWorkload;
@@ -145,9 +154,20 @@ void Hyperneat::generateNetworks(std::vector<NeuralNetwork>& networks, std::vect
 void Hyperneat::generateNetworksThread(int startIndex, int worlkload, std::vector<NeuralNetwork>& networks, std::vector<std::vector<float>>& inputSubstrate,
 	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates, std::atomic<bool>* ticket)
 {
+	std::vector<NeuralNetwork*> hyperNets;
+	for (int i = 0; i < cppns.size(); i++)
+	{
+		hyperNets.push_back(nullptr);
+	}
+
 	for (unsigned int cpt = startIndex; cpt < (startIndex + worlkload); cpt++)
 	{
-		createNetwork(*cppns->getNeuralNetwork(cpt), networks[cpt], inputSubstrate, outputSubstrate, hiddenSubstrates);
+		for (int i = 0; i < cppns.size(); i++)
+		{
+			hyperNets[i] = cppns[i]->getNeuralNetwork(cpt);
+		}
+
+		createNetwork(hyperNets, networks[cpt], inputSubstrate, outputSubstrate, hiddenSubstrates);
 	}
 
 	if (ticket != nullptr)
@@ -157,18 +177,27 @@ void Hyperneat::generateNetworksThread(int startIndex, int worlkload, std::vecto
 	}
 }
 
-void Hyperneat::genomeToNetwork(Genome& gen, NeuralNetwork& net)
+void Hyperneat::genomeToNetwork(std::vector<Genome*>& gen, NeuralNetwork& net)
 {
 	genomeToNetwork(gen, net, inputSubstrate, outputSubstrate, hiddenSubstrates);
 }
 
-void Hyperneat::genomeToNetwork(Genome& gen, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+void Hyperneat::genomeToNetwork(std::vector<Genome*>& gen, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
 	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
 {
-	NeuralNetwork hyperNet;
-	cppns->genomeToNetwork(gen, hyperNet);
+	std::vector<NeuralNetwork*> hyperNets;
+	for (int i = 0; i < gen.size(); i++)
+	{
+		hyperNets.push_back(new NeuralNetwork());
+		cppns[i]->genomeToNetwork(*gen[i], *hyperNets[i]);
+	}
 	initNetwork(net, inputSubstrate, outputSubstrate, hiddenSubstrates);
-	createNetwork(hyperNet, net, inputSubstrate, outputSubstrate, hiddenSubstrates);
+	createNetwork(hyperNets, net, inputSubstrate, outputSubstrate, hiddenSubstrates);
+
+	for (int i = 0; i < gen.size(); i++)
+	{
+		delete hyperNets[i];
+	}
 }
 
 void Hyperneat::initNetworks()
@@ -191,9 +220,10 @@ void Hyperneat::initNetwork(NeuralNetwork& net, std::vector<std::vector<float>>&
 	//Add the input layer
 	net.addMultipleInputNode(inputSubstrate.size());
 
-	for (std::vector<std::vector<std::vector<float>>>::iterator itLayer = hiddenSubstrates.begin(); itLayer != hiddenSubstrates.end(); ++itLayer)
+	int layer = 1;
+	for (std::vector<std::vector<std::vector<float>>>::iterator itLayer = hiddenSubstrates.begin(); itLayer != hiddenSubstrates.end(); ++itLayer, ++layer)
 	{
-		net.addHiddenNode(itLayer->size(), hyperParam.activationFunction);
+		net.addHiddenNode(itLayer->size(), layer, hyperParam.activationFunction);
 	}
 
 	//Add and connect the output layer
@@ -203,10 +233,15 @@ void Hyperneat::initNetwork(NeuralNetwork& net, std::vector<std::vector<float>>&
 void Hyperneat::createNetwork(int cppnIndex, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
 	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
 {
-	createNetwork(*cppns->getNeuralNetwork(cppnIndex), net, inputSubstrate, outputSubstrate, hiddenSubstrates);
+	std::vector<NeuralNetwork*> hyperNets;
+	for (int i = 0; i < cppns.size(); i++)
+	{
+		hyperNets[i] = cppns[i]->getNeuralNetwork(cppnIndex);
+	}
+	createNetwork(hyperNets, net, inputSubstrate, outputSubstrate, hiddenSubstrates);
 }
 
-void Hyperneat::createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
+void Hyperneat::createNetwork(std::vector<NeuralNetwork*>& hypernets, NeuralNetwork& net, std::vector<std::vector<float>>& inputSubstrate,
 	std::vector<std::vector<float>>& outputSubstrate, std::vector<std::vector<std::vector<float>>>& hiddenSubstrates)
 {
 	net.clearConnections();
@@ -216,18 +251,30 @@ void Hyperneat::createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net, std::
 
 	int layer = 1;
 
+	std::vector<NeuralNetwork*>::iterator hyperNet = hypernets.begin();
+	int cppnIndex = 0;
+
 	//Connect the hidden layers
 	for (std::vector<std::vector<std::vector<float>>>::iterator itLayer = hiddenSubstrates.begin(); itLayer != hiddenSubstrates.end(); ++itLayer)
 	{
-		connectLayer(layer, hypernet, net, itLayer->begin(), itLayer->end(), beginPreviousLayer, endPreviousLayer);
+		connectLayer(layer, **hyperNet, net, itLayer->begin(), itLayer->end(), beginPreviousLayer, endPreviousLayer, cppnIndex);
 
 		beginPreviousLayer = itLayer->begin();
 		endPreviousLayer = itLayer->end();
 
+		if (hypernets.size() > 2)
+		{
+			++hyperNet;
+			++cppnIndex;
+		}
+
 		layer++;
 	}
 
-	connectLayer(layer, hypernet, net, outputSubstrate.begin(), outputSubstrate.end(), beginPreviousLayer, endPreviousLayer);
+	++hyperNet;
+	++cppnIndex;
+
+	connectLayer(layer, **hyperNet, net, outputSubstrate.begin(), outputSubstrate.end(), beginPreviousLayer, endPreviousLayer, cppnIndex);
 }
 
 /**
@@ -235,7 +282,7 @@ void Hyperneat::createNetwork(NeuralNetwork& hypernet, NeuralNetwork& net, std::
 */
 void Hyperneat::connectLayer(unsigned int layer, NeuralNetwork& hypernet, NeuralNetwork& net, std::vector<std::vector<float>>::iterator itNode,
 	std::vector<std::vector<float>>::iterator itNodeEnd,
-	std::vector<std::vector<float>>::iterator beginPreviousLayer, const std::vector<std::vector<float>>::iterator endPreviousLayer)
+	std::vector<std::vector<float>>::iterator beginPreviousLayer, const std::vector<std::vector<float>>::iterator endPreviousLayer, int cppnIndex)
 {
 	int nodeB = 0;
 
@@ -253,14 +300,14 @@ void Hyperneat::connectLayer(unsigned int layer, NeuralNetwork& hypernet, Neural
 		{
 			std::vector<float> output, input;
 			std::vector<float> p1 = std::vector<float>(prevLayer->begin(), prevLayer->end());
-			input = hyperParam.cppnInputFunction(hyperParam.inputVariables, p1, p2);
+			input = hyperParam.cppnInputFunction[cppnIndex](hyperParam.inputVariables, p1, p2);
 
 			hypernet.compute(input, output);
 
 			//Check if we should create a connection
-			if (hyperParam.thresholdFunction(hyperParam.thresholdVariables, output, p1, p2) == true)
+			if (hyperParam.thresholdFunction[cppnIndex](hyperParam.thresholdVariables, output, p1, p2) == true)
 			{
-				float weight = hyperParam.weightModifierFunction(hyperParam.weightVariables, output[0], p1, p2);
+				float weight = hyperParam.weightModifierFunction[cppnIndex](hyperParam.weightVariables, output, p1, p2);
 
 				net.connectNodes(layer - 1, nodeA, layer, nodeB, weight);
 			}
@@ -312,21 +359,24 @@ bool Hyperneat::backprop(const std::vector<float>& inputs, const std::vector<flo
 					p1 = &hiddenSubstrates.back()[i2];
 				}
 
-				cppnInputs = hyperParam.cppnInputFunction(hyperParam.inputVariables, *p1, outputSubstrate[cpt]);
+				cppnInputs = hyperParam.cppnInputFunction[0](hyperParam.inputVariables, *p1, outputSubstrate[cpt]);
 
-				if (hyperParam.cppnOutput > 1)
+				if (hyperParam.cppnOutput[0] > 1)
 				{
-					cppns->getNeuralNetwork(i)->compute(cppnInputs, cppnOutputs);
+					cppns[0]->getNeuralNetwork(i)->compute(cppnInputs, cppnOutputs);
 				}
 
 				cppnOutputs[0] = (*it->getPreviousNodes())[i2].second - learnRate * delta * (*it->getPreviousNodes())[i2].first->getValue();
-				cppnOutputs[0] = hyperParam.inverseWeightModifierFunction(hyperParam.weightVariables, cppnOutputs[0], *p1, outputSubstrate[cpt]);
+				cppnOutputs[0] = hyperParam.inverseWeightModifierFunction(hyperParam.weightVariables, cppnOutputs, *p1, outputSubstrate[cpt]);
 				
-				cppns->getNeuralNetwork(i)->backprop(cppnInputs, cppnOutputs, learnRate);
+				cppns[0]->getNeuralNetwork(i)->backprop(cppnInputs, cppnOutputs, learnRate);
 			}
 		}
 
-		createNetwork(*cppns->getNeuralNetwork(i), networks[i], inputSubstrate, outputSubstrate, hiddenSubstrates);
+		std::vector<NeuralNetwork*> hyperNet;
+		hyperNet.push_back(cppns[0]->getNeuralNetwork(i));
+
+		createNetwork(hyperNet, networks[i], inputSubstrate, outputSubstrate, hiddenSubstrates);
 	}
 
 	return true;
@@ -336,7 +386,7 @@ void Hyperneat::applyBackprop()
 {
 	for (int i = 0; i < networks.size(); i++)
 	{
-		networks[i].applyBackprop(cppns->getGenomes()[i]);
+		networks[i].applyBackprop(cppns[0]->getGenomes()[i]);
 	}
 }
 

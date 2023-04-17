@@ -54,9 +54,6 @@
     <ClCompile Include="Activation.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
-    <ClCompile Include="HyperBackprop.cpp">
-      <Filter>Fichiers sources</Filter>
-    </ClCompile>
     <ClCompile Include="CPPN_Neat.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
@@ -114,9 +111,6 @@
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="CPPN_Neat.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
-    <ClInclude Include="HyperBackprop.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
     <ClInclude Include="GeneNode.h">
