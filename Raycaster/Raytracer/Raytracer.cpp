@@ -28,7 +28,7 @@
 float sceneTest(std::vector<NeuralNetwork>& networks, const std::vector<std::vector<std::vector<float>>>& outputs,
 	const std::vector<std::vector<bool>>& inputs);
 
-#define LOAD
+//#define LOAD
 
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
 	sceneTest(networks, outputs, inputs);
 	
 	//Do test
-	int epoch = 10000000;
+	int epoch = 100000000;
 	float lRate = 0.000001;
 
 	unsigned int percent = 0;
@@ -284,9 +284,9 @@ int main(int argc, char *argv[])
 #else // LOAD
 	std::vector<Genome> gen;
 	gen.reserve(3);
-	gen.push_back(Genome::loadGenome("genX"));
-	gen.push_back(Genome::loadGenome("genY"));
-	gen.push_back(Genome::loadGenome("genZ"));
+	gen.push_back(Genome::loadGenome("genIdX"));
+	gen.push_back(Genome::loadGenome("genIdY"));
+	gen.push_back(Genome::loadGenome("genIdZ"));
 
 	networks.resize(3);
 
