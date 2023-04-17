@@ -18,7 +18,7 @@
 
 #define MULTITHREAD
 
-#define RADIUS 10
+#define RADIUS 7
 
 #define OCTSIZE 0.00390625
 
@@ -203,12 +203,12 @@ int main(int argc, char *argv[])
 
 	Genome gen(nInputs, 3, arrActiv);
 
-	gen.fullyConnect(2, 40, tanh, linear, allConn, xavierUniformInit, seed);
+	gen.fullyConnect(1, 60, tanh, linear, allConn, xavierUniformInit, seed);
 
 	Neat::genomeToNetwork(gen, network);
 
 	//Do test
-	int epoch = 100000000;
+	int epoch = 50000000;
 	float lRate = 0.0000005;
 
 	unsigned int percent = 0;

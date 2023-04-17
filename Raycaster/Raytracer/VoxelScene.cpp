@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <fstream>
 
-//#define RENDER
+#define RENDER
 
 VoxelScene::VoxelScene(int _levels)
 {
