@@ -880,22 +880,22 @@ void VoxelScene::simplify()
 
 void VoxelScene::simplifyOctree(Octree<glm::dvec3>* tree)
 {
-	glm::dvec3 *color = nullptr;
+	glm::dvec3* color = nullptr;
 
 	//Check if leaves are similar
 	for (uint8_t i = 0; i < 8; i++)
 	{
-		if (tree->contains == OCTREE_CONTENT::SPARSE)
+		if (tree->tree[i].contains == OCTREE_CONTENT::SPARSE)
 		{
 			simplifyOctree(tree->tree);
 
-			if (tree->contains == OCTREE_CONTENT::SPARSE)
+			if (tree->tree[i].contains == OCTREE_CONTENT::SPARSE)
 			{
 				return;
 			}
 		}
 
-		if (tree->contains == OCTREE_CONTENT::EMPTY)
+		if (tree->tree[i].contains == OCTREE_CONTENT::EMPTY)
 		{
 			return;
 		}
