@@ -739,24 +739,24 @@ void VoxelScene::simplify()
 	}
 }
 
-void VoxelScene::simplifyOctree(Octree<glm::vec3>* tree)
+void VoxelScene::simplifyOctree(Octree<glm::dvec3>* tree)
 {
-	glm::vec3 *color = nullptr;
+	glm::dvec3* color = nullptr;
 
 	//Check if leaves are similar
 	for (uint8_t i = 0; i < 8; i++)
 	{
-		if (tree->contains == OCTREE_CONTENT::SPARSE)
+		if (tree->tree[i].contains == OCTREE_CONTENT::SPARSE)
 		{
 			simplifyOctree(tree->tree);
 
-			if (tree->contains == OCTREE_CONTENT::SPARSE)
+			if (tree->tree[i].contains == OCTREE_CONTENT::SPARSE)
 			{
 				return;
 			}
 		}
 
-		if (tree->contains == OCTREE_CONTENT::EMPTY)
+		if (tree->tree[i].contains == OCTREE_CONTENT::EMPTY)
 		{
 			return;
 		}
@@ -776,7 +776,7 @@ void VoxelScene::simplifyOctree(Octree<glm::vec3>* tree)
 	delete[] tree->tree;
 
 	tree->contains = OCTREE_CONTENT::FILLED;
-	tree->object = new glm::vec3(*color);
+	tree->object = new glm::dvec3(*color);
 
 	//std::cout << "merged\n";
 }
