@@ -632,7 +632,7 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 
 	inputsFloat.resize(inputs[0].size());
 
-	float score = outputs.size();
+	float score = outputs.size() * 2;
 
 	for (int cpt = 0; cpt < outputs.size(); cpt++)
 	{
@@ -663,7 +663,7 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 			score -= sqrt(square);
 		}
 		else {
-			score -= 1;
+			score -= 2;
 		}
 
 	}
