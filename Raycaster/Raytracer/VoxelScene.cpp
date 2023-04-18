@@ -754,7 +754,7 @@ bool VoxelScene::addPoint(glm::dvec3 pos, glm::dvec3 color)
 
 	if (pos.x < 0 || pos.x >= worldMap.width || pos.y < 0 || pos.y >= worldMap.height || pos.z < 0 || pos.z >= worldMap.depth) return false;
 
-	Octree<glm::dvec3> *currentTree = (worldMap.map + int(pos.x) * worldMap.height * worldMap.depth + int(pos.y) * worldMap.depth + int(pos.z));
+	Octree<glm::dvec3>* currentTree = (worldMap.map + int(pos.x) * worldMap.height * worldMap.depth + int(pos.y) * worldMap.depth + int(pos.z));
 
 	//Check that we are within bounds
 
@@ -775,7 +775,7 @@ bool VoxelScene::addPoint(glm::dvec3 pos, glm::dvec3 color)
 		level++;
 
 		uint8_t index = 0;
-		
+
 		for (uint8_t i = 0; i < 3; i++)
 		{
 			if (pos[i] > divLevel)
@@ -876,22 +876,22 @@ void VoxelScene::simplify()
 
 void VoxelScene::simplifyOctree(Octree<glm::dvec3>* tree)
 {
-	glm::dvec3 *color = nullptr;
+	glm::dvec3* color = nullptr;
 
 	//Check if leaves are similar
 	for (uint8_t i = 0; i < 8; i++)
 	{
-		if (tree->contains == OCTREE_CONTENT::SPARSE)
+		if (tree->tree[i].contains == OCTREE_CONTENT::SPARSE)
 		{
 			simplifyOctree(tree->tree);
 
-			if (tree->contains == OCTREE_CONTENT::SPARSE)
+			if (tree->tree[i].contains == OCTREE_CONTENT::SPARSE)
 			{
 				return;
 			}
 		}
 
-		if (tree->contains == OCTREE_CONTENT::EMPTY)
+		if (tree->tree[i].contains == OCTREE_CONTENT::EMPTY)
 		{
 			return;
 		}
