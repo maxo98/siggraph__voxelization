@@ -17,14 +17,17 @@
 
 #define MULTITHREAD
 
-#define RADIUS 10
+#define RADIUS 7
 
 #define OCTSIZE 0.00390625
 
 #define GEN 20
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
+	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks,
+	std::vector<std::vector<std::vector<float>>> inputSubstrate,
+	std::vector<std::vector<std::vector<float>>> hiddenSubstrate,
+	std::vector<std::vector<float>> outputSubstrate);
 
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks, std::atomic<bool>* ticket = nullptr);
@@ -32,7 +35,7 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
-#define LOAD
+//#define LOAD
 
 std::vector<float> normalEstimationCppnInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -298,7 +301,7 @@ int main(int argc, char *argv[])
 	}
 
 	//Do test
-	hypeneatTest(popSize, &hyper, outputs, inputs, networks);
+	hypeneatTest(popSize, &hyper, outputs, inputs, networks, inputSubstrate, hiddenSubstrate, outputSubstrate);
 
 	//Save
 	hyper.saveHistory();
@@ -496,7 +499,10 @@ int main(int argc, char *argv[])
 }
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks)
+	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks,
+	std::vector<std::vector<std::vector<float>>> inputSubstrate,
+	std::vector<std::vector<std::vector<float>>> hiddenSubstrate,
+	std::vector<std::vector<float>> outputSubstrate)
 {
 	std::vector<float> fitness;
 
@@ -577,6 +583,11 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 		algo->getGoat()->saveCurrentGenome();
 
 		algo->evolve();
+
+		for (int axis = 0; axis < 3; axis++)
+		{
+			algo->generateNetworks(networks[axis], inputSubstrate[axis], outputSubstrate, hiddenSubstrate);
+		}
 	}
 
 	std::cout << "done" << std::endl;
@@ -610,12 +621,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 	inputsFloat.resize(inputs[0].size());
 
-	float score = outputs.size();
-
-	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
-	std::vector<std::vector<float>> outputSubstrate;
-	outputSubstrate.push_back(std::vector<float>());
-	outputSubstrate[0].push_back(0);
+	float score = outputs.size() * 2;
 
 	for (int cpt = 0; cpt < outputs.size(); cpt++)
 	{
