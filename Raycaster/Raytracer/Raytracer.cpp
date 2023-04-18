@@ -37,6 +37,25 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 
 //#define LOAD
 
+std::vector<float> firstNodeInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
+{
+	p1.push_back(0.5);
+	return p1;
+}
+
+float weightSelector(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
+{
+	for (int axis = 0; axis < 3; axis++)
+	{
+		if (p2[axis] == 1)
+		{
+			return values[axis];
+		}
+	}
+
+	return 0;
+}
+
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
 
@@ -186,12 +205,12 @@ int main(int argc, char *argv[])
 	HyperneatParameters hyperneatParam;
 
 	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput = 6;
-	hyperneatParam.cppnInputFunction = basicCppnInput;
-	hyperneatParam.cppnOutput = 1;
+	hyperneatParam.cppnInput = 4;
+	hyperneatParam.cppnInputFunction = firstNodeInput;
+	hyperneatParam.cppnOutput = 3;
 	hyperneatParam.nDimensions = 1;
 	hyperneatParam.thresholdFunction = noThreshold;
-	hyperneatParam.weightModifierFunction = noChangeWeight;
+	hyperneatParam.weightModifierFunction = weightSelector;
 
 	int popSize = 100;
 	int result = 0;

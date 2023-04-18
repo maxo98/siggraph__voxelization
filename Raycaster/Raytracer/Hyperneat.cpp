@@ -260,7 +260,7 @@ void Hyperneat::connectLayer(unsigned int layer, NeuralNetwork& hypernet, Neural
 			//Check if we should create a connection
 			if (hyperParam.thresholdFunction(hyperParam.thresholdVariables, output, p1, p2) == true)
 			{
-				float weight = hyperParam.weightModifierFunction(hyperParam.weightVariables, output[0], p1, p2);
+				float weight = hyperParam.weightModifierFunction(hyperParam.weightVariables, output, p1, p2);
 
 				net.connectNodes(layer - 1, nodeA, layer, nodeB, weight);
 			}
@@ -320,7 +320,7 @@ bool Hyperneat::backprop(const std::vector<float>& inputs, const std::vector<flo
 				}
 
 				cppnOutputs[0] = (*it->getPreviousNodes())[i2].second - learnRate * delta * (*it->getPreviousNodes())[i2].first->getValue();
-				cppnOutputs[0] = hyperParam.inverseWeightModifierFunction(hyperParam.weightVariables, cppnOutputs[0], *p1, outputSubstrate[cpt]);
+				cppnOutputs[0] = hyperParam.inverseWeightModifierFunction(hyperParam.weightVariables, cppnOutputs, *p1, outputSubstrate[cpt]);
 				
 				cppns->getNeuralNetwork(i)->backprop(cppnInputs, cppnOutputs, learnRate);
 			}

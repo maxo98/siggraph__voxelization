@@ -15,7 +15,7 @@ typedef bool (*ThresholdFunction) (std::vector<void*> variables, std::vector<flo
 typedef std::vector<float> (*CppnInputFunction) (std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2);
 
 //Returns the weight to apply to the connection
-typedef float (*WeightModifierFunction) (std::vector<void*> variables, float weight, const std::vector<float>& p1, const std::vector<float>& p2);
+typedef float (*WeightModifierFunction) (std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2);
 
 //Hyperneat configuration
 typedef struct {
@@ -129,33 +129,33 @@ inline bool leoThreshold(std::vector<void*> variables, std::vector<float> values
 }
 
 //Weight modifiers functions
-inline float noChangeWeight(std::vector<void*> variables, float weight, const std::vector<float>& p1, const std::vector<float>& p2)
+inline float noChangeWeight(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
 {
-	return weight;
+	return values[0];
 }
 
-inline float proportionnalWeight (std::vector<void*> variables, float weight, const std::vector<float>& p1, const std::vector<float>& p2)
+inline float proportionnalWeight(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
 {
-	return *(float*)variables[0] * weight;
+	return *(float*)variables[0] * values[0];
 }
 
-inline float inverseProportionnalWeight(std::vector<void*> variables, float weight, const std::vector<float>& p1, const std::vector<float>& p2)
+inline float inverseProportionnalWeight(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
 {
-	return weight  / *(float*)variables[0];
+	return values[0] / *(float*)variables[0];
 }
 
-inline float substractWeight(std::vector<void*> variables, float weight, const std::vector<float>& p1, const std::vector<float>& p2)
+inline float substractWeight(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
 {
-	float tmp = (abs(weight) - abs(*(float*)variables[0]));
-	return (tmp > 0 ? tmp * (signbit(weight) == true ? 1 : -1) : 0);
+	float tmp = (abs(values[0]) - abs(*(float*)variables[0]));
+	return (tmp > 0 ? tmp * (signbit(values[0]) == true ? 1 : -1) : 0);
 }
 
-inline float addWeight(std::vector<void*> variables, float weight, const std::vector<float>& p1, const std::vector<float>& p2)
+inline float addWeight(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
 {
-	return (weight == 0 ? 0 : weight + (*(float*)variables[0]) * (signbit(weight) == true ? 1 : -1));
+	return (values[0] == 0 ? 0 : values[0] + (*(float*)variables[0]) * (signbit(values[0]) == true ? 1 : -1));
 }
 
-inline float absWeight(std::vector<void*> variables, float weight, const std::vector<float>& p1, const std::vector<float>& p2)
+inline float absWeight(std::vector<void*> variables, std::vector<float> values, const std::vector<float>& p1, const std::vector<float>& p2)
 {
-	return abs(weight);
+	return abs(values[0]);
 }

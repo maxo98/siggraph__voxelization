@@ -198,7 +198,7 @@ void ES_Hyperneat::prunAndExtract(NeuralNetwork& hypernet, const std::vector<flo
 				input = hyperParam.cppnInputFunction(hyperParam.inputVariables, *p1, *p2);
 				hypernet.compute(input, output);
 
-				connections.emplace(*p1, *p2, hyperParam.weightModifierFunction(hyperParam.weightVariables, output[0], *p1, *p2));
+				connections.emplace(*p1, *p2, hyperParam.weightModifierFunction(hyperParam.weightVariables, output, *p1, *p2));
 			}
 		}
 	}
@@ -395,7 +395,7 @@ void ES_Hyperneat::connectNodes(std::unordered_map<std::vector<float>, std::pair
 						pos = nodesPos.find(range.first->second->pos1);
 					}
 
-					net.connectNodes(pos->second, itNodes->second, hyperParam.weightModifierFunction(hyperParam.weightVariables, output[0], range.first->second->pos1, itNodes->first));
+					net.connectNodes(pos->second, itNodes->second, hyperParam.weightModifierFunction(hyperParam.weightVariables, output, range.first->second->pos1, itNodes->first));
 				}
 
 				++range.first;
