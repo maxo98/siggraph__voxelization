@@ -551,9 +551,6 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				glm::dvec3 posRef(floor(hitPos.x / octSize) * octSize, floor(hitPos.y / octSize) * octSize, floor(hitPos.z / octSize) * octSize);
 				glm::dvec3 colorHolder;
 				glm::dvec3 readPos;
-				glm::dvec3 inputNetwork;
-
-				std::vector<std::vector<float>> inputsPos;
 
 				double maxDistPlus = (radius + 1) * octSize;
 				double maxDist = radius * octSize;
@@ -561,25 +558,14 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 				for (double x = -radius; x <= radius; x++)
 				{
 					readPos.x = hitPos.x + x * octSize;
-					inputNetwork.x = (1 - abs(x * octSize) / maxDistPlus) * (x < 0 ? 1 : -1);
 
 					for (double y = -radius; y <= radius; y++)
 					{
 						readPos.y = hitPos.y + y * octSize;
-						inputNetwork.y = (1 - abs(y * octSize) / maxDistPlus) * (y < 0 ? 1 : -1);
 
 						for (double z = -radius; z <= radius; z++)
 						{
 							readPos.z = hitPos.z + z * octSize;
-							inputNetwork.z = (1 - abs(z * octSize) / maxDistPlus) * (z < 0 ? 1 : -1);
-
-							inputsPos.push_back(std::vector<float>());
-
-							for (int axis = 0; axis < 3; axis++)
-							{
-									
-								inputsPos.back().push_back(inputNetwork[axis]);
-							}
 
 							inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
 						}
