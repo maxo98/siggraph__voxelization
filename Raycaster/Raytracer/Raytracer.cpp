@@ -694,7 +694,7 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 			score -= sqrt(square);
 		}
 		else {
-			score -= 1;
+			score -= 2;
 		}
 
 	}
