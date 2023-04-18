@@ -571,7 +571,7 @@ float sceneTest(std::vector<std::vector<NeuralNetwork>>& networks, int index, co
 
 	inputsFloat.resize(inputs[0].size());
 
-	float score = inputsPos.size();
+	float score = inputsPos.size() * 2;
 
 	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
 	std::vector<std::vector<float>> outputSubstrate;
