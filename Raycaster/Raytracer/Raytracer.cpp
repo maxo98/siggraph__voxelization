@@ -51,6 +51,20 @@ bool thresholdConv(std::vector<void*> variables, std::vector<float> values, cons
 
 std::vector<float> inputConv(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
+	std::vector<float> p;
+
+	for (int axis = 0; axis < 3; axis++)
+	{
+		p.push_back(p1[axis] - p2[axis]);
+	}
+
+	p.push_back(0.5);
+
+	return p;
+}
+
+std::vector<float> firstNodeInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
+{
 	return p1;
 }
 
@@ -201,7 +215,7 @@ int main(int argc, char *argv[])
 	neatparam.pbMutateOnly = 0.25;
 	neatparam.pbMateOnly = 0.2;
 
-	neatparam.speciationDistance = 2.0;
+	neatparam.speciationDistance = 1.0;
 
 
 	neatparam.speciationDistanceMod = 0.3;
@@ -210,16 +224,16 @@ int main(int argc, char *argv[])
 	neatparam.adaptSpeciation = true;
 
 	neatparam.keepChamp = true;
-	neatparam.elistism = false;
+	neatparam.elistism = true;
 	neatparam.rouletteMultiplier = 2.0;
 
 	HyperneatParameters hyperneatParam;
 
 	hyperneatParam.activationFunction = new LinearActivation();
-	hyperneatParam.cppnInput.push_back(3);
+	hyperneatParam.cppnInput.push_back(4);
 	hyperneatParam.cppnInput.push_back(3);
 	hyperneatParam.cppnInputFunction.push_back(inputConv);
-	hyperneatParam.cppnInputFunction.push_back(inputConv);
+	hyperneatParam.cppnInputFunction.push_back(firstNodeInput);
 	hyperneatParam.cppnOutput.push_back(1);
 	hyperneatParam.cppnOutput.push_back(3);
 	hyperneatParam.nDimensions = 1;
