@@ -24,7 +24,10 @@
 #define GEN 50
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks);
+	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks,
+	std::vector<std::vector<float>> inputSubstrate,
+	std::vector<std::vector<std::vector<float>>> hiddenSubstrate,
+	std::vector<std::vector<float>> outputSubstrate);
 
 void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, Hyperneat* algo, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks, std::atomic<bool>* ticket = nullptr);
@@ -190,7 +193,7 @@ int main(int argc, char *argv[])
 	hyperneatParam.thresholdFunction = noThreshold;
 	hyperneatParam.weightModifierFunction = noChangeWeight;
 
-	int popSize = 300;
+	int popSize = 100;
 	int result = 0;
 	int count = 0;
 
@@ -293,7 +296,7 @@ int main(int argc, char *argv[])
 	hyper.generateNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
 
 	//Do test
-	hypeneatTest(popSize, &hyper, outputs, inputs, networks);
+	hypeneatTest(popSize, &hyper, outputs, inputs, networks, inputSubstrate, hiddenSubstrate, outputSubstrate);
 
 	//Save
 	hyper.saveHistory();
@@ -491,7 +494,10 @@ int main(int argc, char *argv[])
 }
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
-	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks)
+	std::vector<std::vector<bool>>& inputs, std::vector<NeuralNetwork>& networks,
+	std::vector<std::vector<float>> inputSubstrate,
+	std::vector<std::vector<std::vector<float>>> hiddenSubstrate,
+	std::vector<std::vector<float>> outputSubstrate)
 {
 	std::vector<float> fitness;
 
@@ -572,6 +578,8 @@ bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 		algo->getGoat()->saveCurrentGenome();
 
 		algo->evolve();
+
+		algo->generateNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
 	}
 
 	std::cout << "done" << std::endl;
@@ -606,11 +614,6 @@ float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vect
 	inputsFloat.resize(inputs[0].size());
 
 	float score = outputs.size();
-
-	std::vector<std::vector<std::vector<float>>> hiddenSubstrate;
-	std::vector<std::vector<float>> outputSubstrate;
-	outputSubstrate.push_back(std::vector<float>());
-	outputSubstrate[0].push_back(0);
 
 	for (int cpt = 0; cpt < outputs.size(); cpt++)
 	{
