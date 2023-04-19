@@ -17,11 +17,11 @@
 
 #define MULTITHREAD
 
-#define RADIUS 7
+#define RADIUS 10
 
 #define OCTSIZE 0.00390625
 
-#define GEN 20
+#define GEN 100
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks,
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 	neatparam.excessCoeff = 1.0;
 	neatparam.mutDiffCoeff = 0.4;
 	neatparam.activationDiffCoeff = 1.0;
-	neatparam.weightCoeff = 0;
+	neatparam.weightCoeff = 1.0;
 
 	neatparam.killRate = 0.2;
 
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 	hyperneatParam.thresholdFunction = noThreshold;
 	hyperneatParam.weightModifierFunction = noChangeWeight;
 
-	int popSize = 150;
+	int popSize = 100;
 	int result = 0;
 	int count = 0;
 
