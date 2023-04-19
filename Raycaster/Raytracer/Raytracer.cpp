@@ -17,11 +17,11 @@
 
 #define MULTITHREAD
 
-#define RADIUS 1
+#define RADIUS 7
 
 #define OCTSIZE 0.00390625
 
-#define GEN 15
+#define GEN 50
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs, std::vector<std::vector<std::vector<std::vector<float>>>>& inputsPos,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 2, 4.55), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 	hyperneatParam.thresholdFunction = noThreshold;
 	hyperneatParam.weightModifierFunction = noChangeWeight;
 
-	int popSize = 150;
+	int popSize = 100;
 	int result = 0;
 	int count = 0;
 

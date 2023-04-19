@@ -577,13 +577,16 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 							readPos.z = hitPos.z + z * octSize;
 							inputNetwork.z = 1 - abs(posRef.z + z * octSize - hitPos.z) / maxDist;
 
-							for (int axis = 0; axis < 3; axis++)
+							if (glm::distance(readPos, hitPos) <= radius)
 							{
-								inputsPos[axis].push_back(std::vector<float>());
-								inputsPos[axis].back().push_back(inputNetwork[axis]);
-							}
+								for (int axis = 0; axis < 3; axis++)
+								{
+									inputsPos[axis].push_back(std::vector<float>());
+									inputsPos[axis].back().push_back(inputNetwork[axis]);
+								}
 
-							inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
+								inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
+							}
 						}
 					}
 				}
@@ -719,22 +722,25 @@ bool VoxelScene::generateData(int x, int y, Camera& camera, std::vector<std::vec
 					readPos.z = hitPos.z + z * octSize;
 					inputNetwork.z = 1 - abs(posRef.z + z * octSize - hitPos.z) / maxDist;
 
-					for (int axis = 0; axis < 3; axis++)
+					if (glm::distance(readPos, hitPos) <= radius)
 					{
-						inputsPos.back()[axis].push_back(std::vector<float>());
-						inputsPos.back()[axis].back().push_back(inputNetwork[axis]);
-					}
-
-					inputs.back().push_back(readPoint(readPos, colorHolder, levels));
-
-					if (z == 0 && x == 0 && y == 0)
-					{
-						if (inputs.back().back() == true)
+						for (int axis = 0; axis < 3; axis++)
 						{
-							in++;
+							inputsPos.back()[axis].push_back(std::vector<float>());
+							inputsPos.back()[axis].back().push_back(inputNetwork[axis]);
 						}
-						else {
-							out++;
+
+						inputs.back().push_back(readPoint(readPos, colorHolder, levels));
+
+						if (z == 0 && x == 0 && y == 0)
+						{
+							if (inputs.back().back() == true)
+							{
+								in++;
+							}
+							else {
+								out++;
+							}
 						}
 					}
 				}
