@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 3, 4.55), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 2, 4.55), "Sphere8.txt");
 
 	std::cout << "Simplifying\n";
 
