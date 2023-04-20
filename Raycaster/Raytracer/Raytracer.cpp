@@ -21,7 +21,7 @@
 
 #define OCTSIZE 0.00390625
 
-#define GEN 20
+#define GEN 100
 
 bool hypeneatTest(int popSize, Hyperneat* algo, std::vector<glm::vec3>& outputs,
 	std::vector<std::vector<bool>>& inputs, std::vector<std::vector<NeuralNetwork>>& networks,
