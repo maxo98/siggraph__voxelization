@@ -119,6 +119,13 @@ std::ostream& operator<<(std::ostream& os, const glm::dvec3& dt)
 	return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const glm::ivec4& dt)
+{
+	os << dt.x << " " << dt.y << " " << dt.z << " " << dt.w;
+
+	return os;
+}
+
 //bool intersectPlane(const glm::vec3& normal, const glm::vec3 &posPlane, const glm::vec3& posRay, const glm::vec3& rayDir, float& t)
 //{
 //	// assuming vectors are all normalized

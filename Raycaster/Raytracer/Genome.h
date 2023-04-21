@@ -64,6 +64,7 @@ public:
 	void saveCurrentGenome(const std::string& fileName = "saveGenome.txt");
 	void addHiddenNode(Activation* activation, unsigned int layer);
 	static Genome loadGenome(const std::string& fileName = "saveGenome.txt");
+	inline void setInputOutput(unsigned int _input, unsigned int _output) { input = _input; output = _output; };
 
 	void fullyConnect(int nLayer, int nNode, Activation* hiddenActivation, Activation* outputActivation, std::unordered_map<std::pair<unsigned int, unsigned int>, unsigned int>& allConnections,
 		WeightInitFunction weightInit, const long long& seed);

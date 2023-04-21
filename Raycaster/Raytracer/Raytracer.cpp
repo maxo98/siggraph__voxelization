@@ -19,7 +19,7 @@
 
 #define MULTITHREAD
 
-#define RADIUS 5
+#define RADIUS 7
 
 #define OCTSIZE 0.00390625
 
@@ -45,9 +45,9 @@ public:
 float sceneTest(NeuralNetwork& network, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs);
 
-void addLayer(int& id, int radius, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Activation* activation, std::vector<GeneNode>* nodes);
+void addLayer(int& id, int size, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Activation* activation, std::vector<GeneNode>* nodes);
 
-void connectLayer(int radius, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Genome& gen,
+void connectLayer(int size, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Genome& gen,
 	std::unordered_map<std::pair<unsigned int, unsigned int>, unsigned int>& allConnections, long long seed);
 
 //#define LOAD
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 
 	nInputs++;//Bias
 
-	Genome gen(nInputs, 3, arrActiv);
+	Genome gen(0, 0, arrActiv);
 
 	std::unordered_map<glm::ivec4, unsigned int, PosNodeHash> nodesId;
 	std::unordered_map<std::pair<unsigned int, unsigned int>, unsigned int> allConnections;
@@ -237,20 +237,23 @@ int main(int argc, char *argv[])
 
 	for (int rad = RADIUS; rad > 0; rad--)
 	{
-		addLayer(id, rad, layer, nodesId, relu, nodes);
+		addLayer(id, rad * 2 + 1, layer, nodesId, relu, nodes);
 		layer++;
 	}
 
-	nodes->push_back(GeneNode(NODE_TYPE::HIDDEN, linear, layer));
-	nodes->push_back(GeneNode(NODE_TYPE::HIDDEN, linear, layer));
-	nodes->push_back(GeneNode(NODE_TYPE::HIDDEN, linear, layer));
+	nodes->push_back(GeneNode(NODE_TYPE::OUTPUT, linear, layer));
+	nodes->push_back(GeneNode(NODE_TYPE::OUTPUT, linear, layer));
+	nodes->push_back(GeneNode(NODE_TYPE::OUTPUT, linear, layer));
+	gen.addConnection(0, id, allConnections, 0);
+	gen.addConnection(0, id+1, allConnections, 0);
+	gen.addConnection(0, id+2, allConnections, 0);
 
 
 	layer = 1;
 
 	for (int rad = RADIUS-1; rad > 0; rad--)
 	{
-		connectLayer(rad, layer, nodesId, gen, allConnections, seed);
+		connectLayer(rad * 2 + 1, layer, nodesId, gen, allConnections, seed);
 
 		layer++;
 	}
@@ -259,15 +262,15 @@ int main(int argc, char *argv[])
 
 	nodePos.w = layer - 1;
 
-	for (int x2 = -1; x2 <= 1; x2++)
+	for (int x2 = 0; x2 <= 2; x2++)
 	{
 		nodePos.x = x2;
 
-		for (int y2 = -1; y2 <= 1; y2++)
+		for (int y2 = 0; y2 <= 2; y2++)
 		{
 			nodePos.y = y2;
 
-			for (int z2 = -1; z2 <= 1; z2++)
+			for (int z2 = 0; z2 <= 2; z2++)
 			{
 				nodePos.z = z2;
 
@@ -278,6 +281,17 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+	//Add bias connection
+	for (auto it = nodesId.begin(); it != nodesId.end(); ++it)
+	{
+		if (it->first.w > 0)
+		{
+			gen.addConnection(0, it->second, allConnections, 0);
+		}
+	}
+
+	gen.setInputOutput(pow(RADIUS, 3), 3);
 
 	Neat::genomeToNetwork(gen, network);
 
@@ -297,7 +311,7 @@ int main(int argc, char *argv[])
 	std::vector<float> inputsFloat;
 	inputsFloat.resize(inputs[0].size()+1);
 
-	inputsFloat.back() = 0.5;
+	inputsFloat.front() = 0.5;
 
 	std::vector<unsigned int> indexList;
 
@@ -317,7 +331,7 @@ int main(int argc, char *argv[])
 		{
 			for (int i = 0; i < inputsFloat.size(); i++)
 			{
-				inputsFloat[i] = (inputs[*itIndex][i] == true ? 1 : 0);
+				inputsFloat[i+1] = (inputs[*itIndex][i] == true ? 1 : 0);
 			}
 
 			network.backprop(inputsFloat, outputs[*itIndex], lRate, true);
@@ -567,21 +581,21 @@ float sceneTest(NeuralNetwork& network, const std::vector<std::vector<float>>& o
 }
 
 
-void addLayer(int& id, int radius, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Activation* activation, std::vector<GeneNode>* nodes)
+void addLayer(int& id, int size, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Activation* activation, std::vector<GeneNode>* nodes)
 {
 	glm::ivec4 pos;
 
 	pos.w = layer;
 
-	for (int x = 0; x < radius; x++)
+	for (int x = 0; x < size; x++)
 	{
 		pos.x = x;
 
-		for (int y = 0; y < radius; y++)
+		for (int y = 0; y < size; y++)
 		{
 			pos.y = y;
 
-			for (int z = 0; z < radius; z++)
+			for (int z = 0; z < size; z++)
 			{
 				pos.z = z;
 
@@ -602,7 +616,7 @@ void addLayer(int& id, int radius, int layer, std::unordered_map<glm::ivec4, uns
 }
 
 
-void connectLayer(int radius, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Genome& gen,
+void connectLayer(int size, int layer, std::unordered_map<glm::ivec4, unsigned int, PosNodeHash>& nodesId, Genome& gen,
 	std::unordered_map<std::pair<unsigned int, unsigned int>, unsigned int>& allConnections, long long seed)
 {
 
@@ -611,15 +625,15 @@ void connectLayer(int radius, int layer, std::unordered_map<glm::ivec4, unsigned
 	pos2.w = layer;
 	pos1.w = layer - 1;
 
-	for (int x = 0; x < radius; x++)
+	for (int x = 0; x < size; x++)
 	{
 		pos1.x = x;
 
-		for (int y = 0; y < radius; y++)
+		for (int y = 0; y < size; y++)
 		{
 			pos1.y = y;
 
-			for (int z = 0; z < radius; z++)
+			for (int z = 0; z < size; z++)
 			{
 				pos1.z = z;
 
@@ -636,12 +650,13 @@ void connectLayer(int radius, int layer, std::unordered_map<glm::ivec4, unsigned
 						{
 							pos2.z = z + z2;
 
-							gen.addConnection(nodesId[pos1], nodesId[pos2], allConnections, heUniformInit(pow(radius + 1, 3), pow(radius, 3), seed));
+							if (nodesId.find(pos2) != nodesId.end())
+							{
+								gen.addConnection(nodesId[pos1], nodesId[pos2], allConnections, heUniformInit(pow(size + 1, 3), pow(size, 3), seed));
+							}
 						}
 					}
 				}
-
-				gen.addConnection(0, nodesId[pos2], allConnections, 0);
 			}
 		}
 	}

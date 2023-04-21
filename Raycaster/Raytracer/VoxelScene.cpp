@@ -577,10 +577,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 							inputNetwork.z = (1 - abs(z * octSize) / maxDistPlus) * (z < 0 ? 1 : -1);
 							pointPos.z = z * octSize;
 
-							if (maxDist >= glm::length(pointPos))
-							{
-								inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
-							}
+							inputs.push_back((readPoint(readPos, colorHolder, levels) == true ? 1 : 0));
 						}
 					}
 				}
@@ -719,24 +716,21 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 					inputNetwork.z = (1 - abs(z * octSize) / maxDistPlus) * (z < 0 ? 1 : -1);
 					pointPos.z = z * octSize;
 
-					if (maxDist >= glm::length(pointPos))
-					{
-						inputs.back().push_back(readPoint(readPos, colorHolder, levels));
+					inputs.back().push_back(readPoint(readPos, colorHolder, levels));
 
+					if (inputs.back().back() == true)
+					{
+						test += inputNetwork;
+					}
+
+					if (z == 0 && x == 0 && y == 0)
+					{
 						if (inputs.back().back() == true)
 						{
-							test += inputNetwork;
+							in++;
 						}
-
-						if (z == 0 && x == 0 && y == 0)
-						{
-							if (inputs.back().back() == true)
-							{
-								in++;
-							}
-							else {
-								out++;
-							}
+						else {
+							out++;
 						}
 					}
 				}
