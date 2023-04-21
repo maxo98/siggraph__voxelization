@@ -218,8 +218,8 @@ int main(int argc, char *argv[])
 	sceneTest(networks, outputs, inputs);
 	
 	//Do test
-	int epoch = 100000000;
-	float lRate = 0.000001;
+	int epoch = 100;
+	float lRate = 0.0001;
 
 	unsigned int percent = 0;
 	unsigned int div = epoch / 100.f;
@@ -233,19 +233,33 @@ int main(int argc, char *argv[])
 	std::vector<float> inputsFloat;
 	inputsFloat.resize(inputs[0].size());
 
+	std::vector<unsigned int> indexList;
+
+	for (int i = 0; i < inputs.size(); i++)
+	{
+		indexList.push_back(i);
+	}
+
+	auto randomEngine = std::default_random_engine(seed);
+
 	for (int i = 0; i < epoch; i++)
 	{
-		int index = randInt(0, inputs.size() - 1);
+		shuffle(indexList.begin(), indexList.end(), randomEngine);
 
-		for (int i = 0; i < inputsFloat.size(); i++)
+
+		for (std::vector<unsigned int>::iterator itIndex = indexList.begin(); itIndex != indexList.end(); ++itIndex)
 		{
-			inputsFloat[i] = (inputs[index][i] == true ? 1 : 0);
+			for (int i = 0; i < inputsFloat.size(); i++)
+			{
+				inputsFloat[i] = (inputs[*itIndex][i] == true ? 1 : 0);
+			}
+
+			for (int axis = 0; axis < 3; axis++)
+			{
+				networks[axis].backprop(inputsFloat, outputs[axis][*itIndex], lRate, true);
+			}
 		}
 
-		for (int axis = 0; axis < 3; axis++)
-		{
-			networks[axis].backprop(inputsFloat, outputs[axis][index], lRate, true);
-		}
 
 		if ((i + 1) % div == 0)
 		{
