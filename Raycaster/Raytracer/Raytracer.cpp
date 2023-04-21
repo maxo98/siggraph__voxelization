@@ -22,7 +22,7 @@
 
 #define OCTSIZE 0.00390625
 
-#define GEN 10
+#define GEN 100
 
 //#define LOAD
 
