@@ -208,8 +208,8 @@ int main(int argc, char *argv[])
 	Neat::genomeToNetwork(gen, network);
 
 	//Do test
-	int epoch = 50000000;
-	float lRate = 0.0000005;
+	int epoch = 100;
+	float lRate = 0.0001;
 
 	unsigned int percent = 0;
 	unsigned int div = epoch / 100.f;
@@ -225,16 +225,30 @@ int main(int argc, char *argv[])
 
 	inputsFloat.back() = 0.5;
 
+	std::vector<unsigned int> indexList;
+
+	for (int i = 0; i < inputs.size(); i++)
+	{
+		indexList.push_back(i);
+	}
+
+	auto randomEngine = std::default_random_engine(seed);
+
 	for (int i = 0; i < epoch; i++)
 	{
-		int index = randInt(0, inputs.size() - 1);
+		shuffle(indexList.begin(), indexList.end(), randomEngine);
 
-		for (int i = 0; i < inputsFloat.size(); i++)
+
+		for (std::vector<unsigned int>::iterator itIndex = indexList.begin(); itIndex != indexList.end(); ++itIndex)
 		{
-			inputsFloat[i] = (inputs[index][i] == true ? 1 : 0);
+			for (int i = 0; i < inputsFloat.size(); i++)
+			{
+				inputsFloat[i] = (inputs[*itIndex][i] == true ? 1 : 0);
+			}
+
+			network.backprop(inputsFloat, outputs[*itIndex], lRate, true);
 		}
 
-		network.backprop(inputsFloat, outputs[index], lRate, true);
 
 		if ((i + 1) % div == 0)
 		{
