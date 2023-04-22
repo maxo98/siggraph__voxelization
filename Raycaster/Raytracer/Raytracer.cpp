@@ -296,8 +296,8 @@ int main(int argc, char *argv[])
 	Neat::genomeToNetwork(gen, network);
 
 	//Do test
-	int epoch = 100;
-	float lRate = 0.0001;
+	int epoch = 50;
+	float lRate = 0.0000000001;
 
 	unsigned int percent = 0;
 	unsigned int div = epoch / 100.f;
