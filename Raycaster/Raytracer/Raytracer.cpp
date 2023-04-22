@@ -5,7 +5,7 @@
 #include "VoxelScene.h"
 #include "ThreadPool.h"
 #include <iomanip>
-#include "Hyperneat.h"
+#include "ES_Hyperneat.h"
 #include <cmath>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -246,11 +246,25 @@ int main(int argc, char *argv[])
 	hyperneatParam.weightModifierFunction.push_back(noChangeWeight);
 	hyperneatParam.weightModifierFunction.push_back(weightConv);
 
+	ES_Parameters esParam;
+
+	esParam.width = 1;
+
+	esParam.initialDepth = 1;
+	esParam.maxDepth = 3;
+	esParam.bandThreshold = 0.3;
+	esParam.iterationLevel = 1;
+	esParam.varianceThreshold = 2;
+	esParam.allowRecurisvity = false;
+
+	esParam.center.push_back(0);
+	esParam.center.push_back(0);
+
 	int popSize = 100;
 	int result = 0;
 	int count = 0;
 
-	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::ONE);
+	ES_Hyperneat hyper(popSize, neatparam, hyperneatParam, esParam, Neat::INIT::ONE);
 
 	//Set node location
 	std::vector<std::vector<bool>> inputs;
