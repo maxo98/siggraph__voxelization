@@ -259,6 +259,7 @@ int main(int argc, char *argv[])
 
 	esParam.center.push_back(0);
 	esParam.center.push_back(0);
+	esParam.center.push_back(0);
 
 	int popSize = 100;
 	int result = 0;
@@ -315,12 +316,38 @@ int main(int argc, char *argv[])
 	outputSubstrate[2].push_back(0);
 	outputSubstrate[2].push_back(1);
 
-	generateLayer(inputSubstrate, RADIUS);
+	glm::dvec3 inputNetwork;
+	glm::dvec3 pointPos;
 
-	for (int i = (RADIUS - 1); i > 0; i--)
+	double maxDistPlus = (RADIUS + 1) * OCTSIZE;
+	double maxDist = RADIUS * OCTSIZE;
+
+	for (double x = -RADIUS; x <= RADIUS; x++)
 	{
-		hiddenSubstrate.push_back(std::vector<std::vector<float>>());
-		generateLayer(hiddenSubstrate.back(), i);
+		inputNetwork.x = (1 - abs(x * OCTSIZE) / maxDistPlus) * (x < 0 ? -1 : 1);
+		pointPos.x = x * OCTSIZE;
+
+		for (double y = -RADIUS; y <= RADIUS; y++)
+		{
+			inputNetwork.y = (1 - abs(y * OCTSIZE) / maxDistPlus) * (y < 0 ? -1 : 1);
+			pointPos.y = y * OCTSIZE;
+
+			for (double z = -RADIUS; z <= RADIUS; z++)
+			{
+				inputNetwork.z = (1 - abs(z * OCTSIZE) / maxDistPlus) * (z < 0 ? -1 : 1);
+				pointPos.z = z * OCTSIZE;
+
+				if (maxDist >= glm::length(pointPos))
+				{
+					inputSubstrate.push_back(std::vector<float>());
+
+					for (int axis = 0; axis < 3; axis++)
+					{
+						inputSubstrate.back().push_back(inputNetwork[axis]);
+					}
+				}
+			}
+		}
 	}
 
 #ifndef LOAD
