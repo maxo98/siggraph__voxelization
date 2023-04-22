@@ -28,7 +28,7 @@
 float sceneTest(NeuralNetwork& network, const std::vector<std::vector<float>>& outputs,
 	const std::vector<std::vector<bool>>& inputs);
 
-//#define LOAD
+#define LOAD
 
 void pollEvents(Window &_window, SDL_Event &_keyboard, int &_mouseX, int &_mouseY) {//Input
 	SDL_Event event;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 2, 4.55), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 2.4, 2.5), "Dragon8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 	Neat::genomeToNetwork(gen, network);
 #endif 
 
-	sceneTest(network, outputs, inputs);
+	//sceneTest(network, outputs, inputs);
 
 	//applyResult(&network, scenes, renderScene);
 
