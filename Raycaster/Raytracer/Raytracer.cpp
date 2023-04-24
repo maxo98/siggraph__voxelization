@@ -189,9 +189,9 @@ int main(int argc, char *argv[])
 #ifndef LOAD
 
 	std::vector<Activation*> arrActiv;
-	Activation* relu = new ReluActivation();
+	Activation* sig = new SigmoidActivation();
 	Activation* linear = new LinearActivation();
-	arrActiv.push_back(relu);
+	arrActiv.push_back(sig);
 
 	int nInputs = 0;
 
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 
 	std::vector<GeneNode>* nodes = gen.getNodes();
 
-	nodes->push_back(GeneNode(NODE_TYPE::INPUT, relu));
+	nodes->push_back(GeneNode(NODE_TYPE::INPUT, sig));
 
 	int id = 1;
 	int layer = 0;
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
 
 	for (int rad = RADIUS; rad > 0; rad--)
 	{
-		addLayer(id, rad * 2 + 1, layer, nodesId, relu, nodes);
+		addLayer(id, rad * 2 + 1, layer, nodesId, sig, nodes);
 		layer++;
 	}
 
@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
 
 	//Do test
 	int epoch = 50;
-	float lRate = 0.0000000001;
+	float lRate = 0.00001;
 
 	unsigned int percent = 0;
 	unsigned int div = epoch / 100.f;
@@ -530,7 +530,7 @@ int main(int argc, char *argv[])
 	stbi_image_free(dataValue);
 
 #ifndef LOAD
-	delete relu;
+	delete sig;
 	delete linear;
 #endif // !LOAD
 
