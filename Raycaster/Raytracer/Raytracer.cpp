@@ -35,7 +35,7 @@ void evaluate(int startIndex, int currentWorkload, std::vector<float>& fitness, 
 float sceneTest(std::vector<NeuralNetwork>& networks, int index, const std::vector<glm::vec3>& outputs,
 	const std::vector<std::vector<bool>>& inputs, Hyperneat* algo);
 
-//#define LOAD
+#define LOAD
 
 std::vector<float> firstNodeInput(std::vector<void*> variables, std::vector<float> p1, std::vector<float> p2)
 {
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 2, 4.55), "Sphere8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 2.4, 2.5), "Dragon8.txt");
 
 	std::cout << "Simplifying\n";
 
