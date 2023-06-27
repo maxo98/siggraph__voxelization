@@ -7,6 +7,8 @@
 #include <iomanip>
 #include "Hyperneat.h"
 
+#pragma comment(lib, "ws2_32.lib")
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -128,7 +130,7 @@ int main(int argc, char *argv[])
 	//scenes[1]->loadModel(glm::dvec3(3, 2.01, 3), "Cube8.txt");
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
-	scenes[0]->loadModel(glm::dvec3(3, 2.4, 2.5), "Dragon8.txt");
+	//scenes[0]->loadModel(glm::dvec3(3, 2.4, 2.5), "Dragon8.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -216,7 +218,7 @@ int main(int argc, char *argv[])
 	int result = 0;
 	int count = 0;
 
-	Hyperneat hyper(popSize, neatparam, hyperneatParam, Neat::INIT::ONE);
+	Hyperneat hyperneat(popSize, neatparam, hyperneatParam, Neat::INIT::ONE);
 
 	//Set node location
 	std::vector<std::vector<bool>> inputs;
@@ -310,15 +312,15 @@ int main(int argc, char *argv[])
 
 	networks.resize(popSize);
 
-	hyper.initNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
+	hyperneat.initNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
 
-	hyper.generateNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
+	hyperneat.generateNetworks(networks, inputSubstrate, outputSubstrate, hiddenSubstrate);
 
 	//Do test
-	hypeneatTest(popSize, &hyper, outputs, inputs, networks, inputSubstrate, hiddenSubstrate, outputSubstrate);
+	hypeneatTest(popSize, &hyperneat, outputs, inputs, networks, inputSubstrate, hiddenSubstrate, outputSubstrate);
 
 	//Save
-	hyper.saveHistory();
+	hyperneat.saveHistory();
 
 
 #endif // !LOAD
@@ -327,7 +329,7 @@ int main(int argc, char *argv[])
 	Genome* genP;
 
 #ifndef LOAD
-	genP = hyper.getGoat();
+	genP = hyperneat.getGoat();
 #else
 	Genome gen = Genome::loadGenome("saveGenome.txt");
 
@@ -431,16 +433,19 @@ int main(int argc, char *argv[])
 			{
 
 				tickets.emplace_back(false);
-				pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], std::ref(pixels), std::ref(queueLock), std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyper, genP, &tickets.back());
+				pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], std::ref(pixels), std::ref(queueLock), std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyperneat, genP, &tickets.back());
 				++threads;
 			}
 #endif // MULTITHREAD
 
-			scenes[renderScene]->drawPixels(pixels, queueLock, window, cam, buffer, OCTSIZE, RADIUS, &hyper, genP);
+			scenes[renderScene]->drawPixels(pixels, queueLock, window, cam, buffer, OCTSIZE, RADIUS, &hyperneat, genP);
 
 			timer = SDL_GetTicks();
 
-			ThreadPool::getInstance()->waitForTask();
+			for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
+			{
+				itTicket->wait(false);
+			}
 
 			//Window pixel color
 			for (int x = 0; x < windowWidth; x++)

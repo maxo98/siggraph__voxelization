@@ -9,6 +9,7 @@
 #include "Utils.h"
 #include "Hyperneat.h"
 #include <queue>
+#include "client.h"
 
 #define MAP_WIDTH 20
 #define MAP_HEIGHT 20
@@ -58,6 +59,8 @@ public:
 
 	bool generateData(int x, int y, Camera& camera, std::vector<std::vector<bool>>& inputs, double octSize, int radius, int& in, int& out);
 
+	void receive();
+
 	glm::dvec3 min, max;
 
 private:
@@ -74,4 +77,7 @@ private:
 	glm::dvec3 lightColor = glm::dvec3(1.2, 1.2, 1.2);
 
 	//glm::dvec3 gridOffset = glm::dvec3(10, 10, 10);
+
+	Client client;
+	bool stop = false;
 };

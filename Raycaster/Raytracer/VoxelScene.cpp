@@ -2,6 +2,7 @@
 #include <limits>
 #include <algorithm>
 #include <fstream>
+#include "ThreadPool.h"
 
 VoxelScene::VoxelScene(int _levels)
 {
@@ -11,10 +12,17 @@ VoxelScene::VoxelScene(int _levels)
 	worldMap.depth = MAP_DEPTH;
 
 	levels = _levels;
+
+	client.connectSocket("127.0.0.1", 3333);
+
+	ThreadPool* pool = ThreadPool::getInstance();
+
+	pool->queueJob(&VoxelScene::receive, this);
 }
 
 VoxelScene::~VoxelScene()
 {
+	stop = true;
 	delete[] worldMap.map;
 }
 
@@ -62,7 +70,7 @@ bool VoxelScene::rayParam(Octree<glm::dvec3>* oct, const glm::dvec3& octPos, glm
 		t1[i] = ((double)octPos[i] + lvl2 - pos[i]) / (double)rayDir[i];
 	}
 
-	if (std::max(std::max(t0[0], t0[1]), t0[2]) <= std::min(std::min(t1[0], t1[1]), t1[2]))
+	if (max(max(t0[0], t0[1]), t0[2]) <= min(min(t1[0], t1[1]), t1[2]))
 	{
 		return procSubtree(t0, t1, oct, octPos, lvl, a, octreeHit, normal, t, hitOnEnter);
 	}
@@ -1006,4 +1014,20 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 	}
 
 	return false;
+}
+
+void VoxelScene::receive()
+{
+	int size = sizeof(float) * 6;
+	float buff[6];
+
+	while (stop == false)
+	{
+		int n = client.reception((char*)buff, sizeof(float) * 3);
+
+		if (n > 0)
+		{
+			addPoint(glm::dvec3(buff[0], buff[1], buff[2]), glm::dvec3(buff[3], buff[4], buff[5]));
+		}
+	}
 }
