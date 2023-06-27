@@ -8,6 +8,7 @@
 #include <mutex>
 #include "Utils.h"
 #include "Hyperneat.h"
+#include <queue>
 
 #define MAP_WIDTH 20
 #define MAP_HEIGHT 20
@@ -40,7 +41,7 @@ public:
 	void simplifyOctree(Octree<glm::dvec3>* tree);
 	bool loadModel(glm::dvec3 pos, std::string file);
 	
-	void drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, 
+	void drawPixels(std::queue<std::pair<int, int>>& pixels, std::mutex& queueLock, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer,
 		double octSize, int radius, Hyperneat* hyperneat = nullptr, Genome* gen = nullptr, std::atomic<bool>* ticket = nullptr);
 
 	//Octree traveral

@@ -17,7 +17,7 @@
 
 #define MULTITHREAD
 
-#define RADIUS 10
+#define RADIUS 3
 
 #define OCTSIZE 0.00390625
 
@@ -366,8 +366,6 @@ int main(int argc, char *argv[])
 
 	buffer.resize(windowWidth, std::vector<glm::vec3>(windowHeight, glm::vec3(0,0,1)));
 
-	bool first = true;
-
 	while (!window.isClosed())///////////////////////////////////////////////////////////////////////////////Main loop
 	{
 		pollEvents(window, keyboard, mouseX, mouseY);///////////////////////Keyboard input
@@ -405,92 +403,56 @@ int main(int argc, char *argv[])
 				//SDL_WarpMouseInWindow(window.getWindow(), windowWidth/2, windowHeight/2);
 			}
 
-			if(first == true)
+			int threads = 0;
+			unsigned int cpus = std::thread::hardware_concurrency() - 1;
+
+			std::queue<std::pair<int, int>> pixels;
+
+			std::mutex queueLock;
+
+			for (float x = 0; x < windowWidth; ++x)
 			{
-				first = false;
-
-				int threads = 1;
-				unsigned int cpus = std::thread::hardware_concurrency() - 1;
-
-				float totalWorkload = windowWidth * windowHeight;
-				float workload = totalWorkload / cpus;
-				float restWorkload = 0;
-				int currentWorkload = totalWorkload;
-				int startIndex = 0;
-				int count = 0;
-
-				std::deque<std::atomic<bool>> tickets;
-
-				int x = 0, y = 0;
-
-	#ifdef MULTITHREAD
-				while (workload < 1)
+				for (float y = 0; y < windowHeight; ++y)
 				{
-					cpus--;
-					workload = totalWorkload / cpus;
+					pixels.push(std::pair(x, y));
 				}
-
-				while (cpus > threads)
-				{
-					currentWorkload = floor(workload);
-					float workloadFrac = fmod(workload, 1.0f);
-					restWorkload = workloadFrac;
-
-					tickets.emplace_back(false);
-					pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], currentWorkload, x, y, std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyper, genP, &tickets.back());
-					++threads;
-
-					x += currentWorkload / windowHeight;
-					y += fmod(currentWorkload / float(windowHeight), 1.0f) * windowHeight;
-
-					if (y >= windowHeight)
-					{
-						x++;
-						y -= windowHeight;
-					}
-
-					count += currentWorkload + floor(restWorkload);
-					startIndex += currentWorkload + floor(restWorkload);
-
-					restWorkload -= floor(restWorkload);
-					restWorkload += workloadFrac;
-				}
-
-				while (restWorkload > 0)
-				{
-					restWorkload--;
-					currentWorkload++;
-				}
-	#endif // MULTITHREAD
-
-				count += currentWorkload;
-
-				while (count > totalWorkload)
-				{
-					currentWorkload--;
-					count--;
-				}
-
-				scenes[renderScene]->drawPixels(currentWorkload, x, y, window, cam, buffer, OCTSIZE, RADIUS, &hyper, genP);
-
-				timer = SDL_GetTicks();
-
-				for (std::deque<std::atomic<bool>>::iterator itTicket = tickets.begin(); itTicket != tickets.end(); ++itTicket)
-				{
-					itTicket->wait(false);
-				}
-
-				//Window pixel color
-				for (int x = 0; x < windowWidth; x++)
-				{
-					for (int y = 0; y < windowHeight; y++)
-					{
-						window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
-					}
-				}
-
-				SDL_RenderPresent(Window::renderer);
 			}
+
+			int startIndex = 0;
+			int count = 0;
+
+			std::deque<std::atomic<bool>> tickets;
+
+			int x = 0, y = 0;
+
+#ifdef MULTITHREAD
+
+			while (cpus > threads)
+			{
+
+				tickets.emplace_back(false);
+				pool->queueJob(&VoxelScene::drawPixels, scenes[renderScene], std::ref(pixels), std::ref(queueLock), std::ref(window), std::ref(cam), std::ref(buffer), OCTSIZE, RADIUS, &hyper, genP, &tickets.back());
+				++threads;
+			}
+#endif // MULTITHREAD
+
+			scenes[renderScene]->drawPixels(pixels, queueLock, window, cam, buffer, OCTSIZE, RADIUS, &hyper, genP);
+
+			timer = SDL_GetTicks();
+
+			ThreadPool::getInstance()->waitForTask();
+
+			//Window pixel color
+			for (int x = 0; x < windowWidth; x++)
+			{
+				for (int y = 0; y < windowHeight; y++)
+				{
+					window.setPixelColor(glm::vec2(x, y), buffer[x][y]);
+				}
+			}
+
+			std::cout << "render\n";
+			SDL_RenderPresent(Window::renderer);
 		}
 	}
 

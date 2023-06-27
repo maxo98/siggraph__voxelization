@@ -524,14 +524,21 @@ bool VoxelScene::traceRay(VoxelMap& map, const glm::dvec3& rayDir, const glm::dv
 	return hit;
 }
 
-void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer, 
+void VoxelScene::drawPixels(std::queue<std::pair<int, int>>& pixels, std::mutex& queueLock, Window& window, Camera& camera, std::vector<std::vector<glm::vec3>>& buffer,
 	double octSize, int radius, Hyperneat* hyperneat, Genome* gen, std::atomic<bool>* ticket)
 {
-	for (int i = 0; i < workload; i++)
+	queueLock.lock();
+
+	while(pixels.size() > 0)
 	{
+		std::pair<int, int> currentPixel = pixels.front();
+		pixels.pop();
+
+		queueLock.unlock();
+
 		//Compute position and direction of a ray
-		double xx = (2.f * ((x + 0.5f) * camera.wdithStep) - 1.f) * camera.angle * camera.aspectratio;
-		double yy = (1.f - 2.f * ((y + 0.5f) * camera.heightStep)) * camera.angle;
+		double xx = (2.f * ((currentPixel.first + 0.5f) * camera.wdithStep) - 1.f) * camera.angle * camera.aspectratio;
+		double yy = (1.f - 2.f * ((currentPixel.second + 0.5f) * camera.heightStep)) * camera.angle;
 
 		glm::dvec3 rayDir = glm::normalize(camera.camRot * glm::vec3(xx, yy, 1.f));
 
@@ -664,26 +671,22 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 			//	}
 			//}
 
-			buffer[x][y] = abs(normal);
+			buffer[currentPixel.first][currentPixel.second] = abs(normal);
 
 			if (hitByLight == false)
 			{
-				buffer[x][y] = glm::dvec3(0, 0, 0);
+				buffer[currentPixel.first][currentPixel.second] = glm::dvec3(0, 0, 0);
 			}
 			
 		}
 		else {
-			buffer[x][y] = glm::vec3(0.05, 0.05, 0.05);
+			buffer[currentPixel.first][currentPixel.second] = glm::vec3(0.05, 0.05, 0.05);
 		}
 
-		y++;
-
-		if (y >= camera.windowHeight)
-		{
-			x++;
-			y -= camera.windowHeight;
-		}
+		queueLock.lock();
 	}
+
+	queueLock.unlock();
 
 	if (ticket != nullptr)
 	{
