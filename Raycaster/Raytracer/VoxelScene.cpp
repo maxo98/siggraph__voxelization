@@ -10,12 +10,12 @@ VoxelScene::VoxelScene()
 	worldMap.height = MAP_HEIGHT;
 	worldMap.depth = MAP_DEPTH;
 
-	loadModel(glm::dvec3(3, 3, 3), "Scene.txt");
+	loadModel(glm::dvec3(3, 3, 3), "SphereTest.txt");
 	//loadModel(glm::dvec3(3.7, 3.3, 2), "Demon.txt");
 
 	std::cout << "Simplifying\n";
 
-	simplify();
+	//simplify();
 
 	std::cout << "Done\n";
 }
@@ -622,7 +622,7 @@ void VoxelScene::drawPixels(int workload, int x, int y, Window& window, Camera& 
 	}
 }
 
-void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
+void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color, const unsigned int maxLevel)
 {
 	uint8_t level = 1;
 	float divLevel = 0.5f;
@@ -638,7 +638,7 @@ void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
 		pos[i] -= int(pos[i]);
 	}
 
-	while (level < levels && currentTree->contains != OCTREE_CONTENT::FILLED)
+	while (level < levels && level < maxLevel  && currentTree->contains != OCTREE_CONTENT::FILLED)
 	{
 		//If empty create tree
 		if (currentTree->contains == OCTREE_CONTENT::EMPTY)
@@ -803,14 +803,15 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 
 		std::string s1, s2, s3;
 		std::string s4, s5, s6;
+		std::string s7;
 
 		while (fs.eof() == false)
 		{
-			fs >> s1 >> s2 >> s3 >> s4 >> s5 >> s6;
+			fs >> s1 >> s2 >> s3 >> s4 >> s5 >> s6 >> s7;
 
 			//I think there's a small bug with the loading of the model, probably due to floating point imprecision
 			//Adding a very small offset makes it disappear
-			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::vec3(stof(s4), stof(s5), stof(s6)));
+			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::vec3(stof(s4), stof(s5), stof(s6)), stoi(s7));
 		}
 
 		fs.close();
