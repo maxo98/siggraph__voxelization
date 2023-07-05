@@ -119,12 +119,13 @@ int main(int argc, char** argv) {
         if (file.is_open()) {
             file << "\n";
             for (int j = 0; j < result->nvertices; ++j) {
-                file << result->vertices[j].x << " "
-                     << result->vertices[j].y << " "
+                file << result->vertices[j].y << " "
                      << result->vertices[j].z << " "
+                     << result->vertices[j].x << " "
                     << materials[shapes[i].mesh.material_ids[0]].diffuse[0] << " "
                     << materials[shapes[i].mesh.material_ids[0]].diffuse[1] << " "
-                    << materials[shapes[i].mesh.material_ids[0]].diffuse[2] << "\n";
+                    << materials[shapes[i].mesh.material_ids[0]].diffuse[2] << " "
+                    << 7 << "\n";
             }
         }
 
