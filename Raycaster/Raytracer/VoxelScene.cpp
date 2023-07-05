@@ -10,7 +10,7 @@ VoxelScene::VoxelScene()
 	worldMap.height = MAP_HEIGHT;
 	worldMap.depth = MAP_DEPTH;
 
-	loadModel(glm::dvec3(3, 3, 3), "SphereTest.txt");
+	loadModel(glm::dvec3(3, 3, 2.5), "mesh_voxelized_res.txt");
 	//loadModel(glm::dvec3(3.7, 3.3, 2), "Demon.txt");
 
 	std::cout << "Simplifying\n";
@@ -811,7 +811,7 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 
 			//I think there's a small bug with the loading of the model, probably due to floating point imprecision
 			//Adding a very small offset makes it disappear
-			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::vec3(stof(s4), stof(s5), stof(s6)), stoi(s7));
+			addPoint(glm::dvec3(stod(s2), stod(s3), stod(s1)) + pos, glm::vec3(stof(s4), stof(s5), stof(s6)), stoi(s7));
 		}
 
 		fs.close();
