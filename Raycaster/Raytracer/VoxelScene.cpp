@@ -782,14 +782,14 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 	return false;
 }
 
-bool VoxelScene::addPoint(glm::dvec3 pos, glm::dvec3 color)
+void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color, const unsigned int maxLevel)
 {
 	uint8_t level = 1;
-	double divLevel = 0.5f;
+	float divLevel = 0.5f;
 
-	if (pos.x < 0 || pos.x >= worldMap.width || pos.y < 0 || pos.y >= worldMap.height || pos.z < 0 || pos.z >= worldMap.depth) return false;
+	if (pos.x < 0 || pos.x >= worldMap.width || pos.y < 0 || pos.y >= worldMap.height || pos.z < 0 || pos.z >= worldMap.depth) return;
 
-	Octree<glm::dvec3> *currentTree = (worldMap.map + int(pos.x) * worldMap.height * worldMap.depth + int(pos.y) * worldMap.depth + int(pos.z));
+	Octree<glm::dvec3>* currentTree = (worldMap.map + int(pos.x) * worldMap.height * worldMap.depth + int(pos.y) * worldMap.depth + int(pos.z));
 
 	//Check that we are within bounds
 
@@ -798,7 +798,7 @@ bool VoxelScene::addPoint(glm::dvec3 pos, glm::dvec3 color)
 		pos[i] -= int(pos[i]);
 	}
 
-	while (level < levels && currentTree->contains != OCTREE_CONTENT::FILLED)
+	while (level < levels && level < maxLevel && currentTree->contains != OCTREE_CONTENT::FILLED)
 	{
 		//If empty create tree
 		if (currentTree->contains == OCTREE_CONTENT::EMPTY)
@@ -810,7 +810,7 @@ bool VoxelScene::addPoint(glm::dvec3 pos, glm::dvec3 color)
 		level++;
 
 		uint8_t index = 0;
-		
+
 		for (uint8_t i = 0; i < 3; i++)
 		{
 			if (pos[i] > divLevel)
@@ -836,12 +836,10 @@ bool VoxelScene::addPoint(glm::dvec3 pos, glm::dvec3 color)
 	{
 		currentTree->contains = OCTREE_CONTENT::FILLED;
 		currentTree->object = new glm::dvec3(color);
-
-		return true;
 	}
-
-	//std::cout << "already filled\n";
-	return false;
+	else {
+		//std::cout << "already filled\n";
+	}
 }
 
 bool VoxelScene::readPoint(glm::dvec3 pos, glm::dvec3& color, int maxLevel)
@@ -965,6 +963,7 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 
 		std::string s1, s2, s3;
 		std::string s4, s5, s6;
+		std::string s7;
 
 		bool init = true;
 
@@ -976,7 +975,7 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 			//Adding a very small offset makes it disappear
 			glm::dvec3 point = glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos;
 
-			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::dvec3(stof(s4), stof(s5), stof(s6)));
+			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::dvec3(stof(s4), stof(s5), stof(s6)), stoi(s7));
 
 			for (uint8_t i = 0; i < 3; i++)
 			{
@@ -1018,16 +1017,16 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 
 void VoxelScene::receive()
 {
-	int size = sizeof(float) * 6;
-	float buff[6];
+	int size = sizeof(float) * 7;
+	float buff[7];
 
 	while (stop == false)
 	{
-		int n = client.reception((char*)buff, sizeof(float) * 3);
+		int n = client.reception((char*)buff, sizeof(float) * 7);
 
 		if (n > 0)
 		{
-			addPoint(glm::dvec3(buff[0], buff[1], buff[2]), glm::dvec3(buff[3], buff[4], buff[5]));
+			addPoint(glm::dvec3(buff[0], buff[1], buff[2]), glm::dvec3(buff[3], buff[4], buff[5]), buff[7]);
 		}
 	}
 }
