@@ -15,7 +15,7 @@ VoxelScene::VoxelScene()
 
 	std::cout << "Simplifying\n";
 
-	simplify();
+	//simplify();
 
 	std::cout << "Done\n";
 }
