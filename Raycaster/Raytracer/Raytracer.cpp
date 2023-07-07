@@ -19,9 +19,9 @@
 
 #define MULTITHREAD
 
-#define RADIUS 3
+#define RADIUS 7
 
-#define OCTSIZE 0.00390625
+#define OCTSIZE 0.0078125
 
 #define GEN 100
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	//scenes.reserve(8);
 
 	//scenes.push_back(new VoxelScene(7));
-	scenes.push_back(new VoxelScene(8));
+	scenes.push_back(new VoxelScene(7));
 	//scenes.push_back(new VoxelScene(7));
 	//scenes.push_back(new VoxelScene(8));
 	//scenes.push_back(new VoxelScene(7));
@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
 
 	//scenes[0]->loadModel(glm::dvec3(3, 3, 5), "Sphere7.txt");
 	//scenes[0]->loadModel(glm::dvec3(3, 2.4, 2.5), "Dragon8.txt");
+	scenes[0]->loadModel(glm::dvec3(3, 3, 3), "Scene.txt");
 
 	std::cout << "Simplifying\n";
 
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
 	glm::quat camRot;
 
 	Camera cam(pos, camRot, 60, windowWidth, windowHeight);
-	cam.lookAt(glm::vec3(3, 3, 5));
+	cam.lookAt(glm::vec3(3, 3, 3));
 
 
 	NeatParameters neatparam;

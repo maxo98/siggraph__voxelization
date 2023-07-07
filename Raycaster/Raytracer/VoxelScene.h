@@ -37,7 +37,7 @@ public:
 	bool traceRay(VoxelMap& map, const glm::dvec3& rayDir, const glm::dvec3& pos, Octree<glm::dvec3>** octreeHit, glm::dvec3& hitPos,
 		glm::dvec3& normal);
 
-	void addPoint(glm::dvec3 pos, glm::vec3 color, const unsigned int maxLevel);
+	void addPoint(glm::dvec3 pos, glm::vec3 color);
 	void simplify();
 	void simplifyOctree(Octree<glm::dvec3>* tree);
 	bool loadModel(glm::dvec3 pos, std::string file);

@@ -4,6 +4,8 @@
 #include <fstream>
 #include "ThreadPool.h"
 
+#define min min
+
 VoxelScene::VoxelScene(int _levels)
 {
 	worldMap.map = new Octree<glm::dvec3>[MAP_WIDTH * MAP_HEIGHT * MAP_DEPTH];
@@ -13,11 +15,11 @@ VoxelScene::VoxelScene(int _levels)
 
 	levels = _levels;
 
-	client.connectSocket("127.0.0.1", 3333);
+	//client.connectSocket("127.0.0.1", 3333);
 
 	ThreadPool* pool = ThreadPool::getInstance();
 
-	pool->queueJob(&VoxelScene::receive, this);
+	//pool->queueJob(&VoxelScene::receive, this);
 }
 
 VoxelScene::~VoxelScene()
@@ -70,7 +72,7 @@ bool VoxelScene::rayParam(Octree<glm::dvec3>* oct, const glm::dvec3& octPos, glm
 		t1[i] = ((double)octPos[i] + lvl2 - pos[i]) / (double)rayDir[i];
 	}
 
-	if (max(max(t0[0], t0[1]), t0[2]) <= min(min(t1[0], t1[1]), t1[2]))
+	if (max(max(t0[0], t0[1]), t0[2]) <= std::min(std::min(t1[0], t1[1]), t1[2]))
 	{
 		return procSubtree(t0, t1, oct, octPos, lvl, a, octreeHit, normal, t, hitOnEnter);
 	}
@@ -637,49 +639,50 @@ void VoxelScene::drawPixels(std::queue<std::pair<int, int>>& pixels, std::mutex&
 				normal = glm::normalize(normal);
 			}
 
-			bool hitByLight = true;/////////////////////////////////////////////////
+			bool hitByLight = false;/////////////////////////////////////////////////
 
-			//double mDist = -glm::dot(-normal, hitPos);
+			double mDist = -glm::dot(-normal, hitPos);
 
-			//for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
-			//{
-			//	//Check if the on which side of the plane the light is
-			//	if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
-			//	{
-			//		glm::dvec3 filler, filler2;
-			//		Octree<glm::dvec3>* oHitLight = nullptr;
+			for (int i = 0; i < pointLights.size() && hitByLight == false; ++i)
+			{
+				//Check if the on which side of the plane the light is
+				//if ((glm::dot(-normal, pointLights[i]) + mDist) < 0)
+				{
+					glm::dvec3 filler, filler2;
+					Octree<glm::dvec3>* oHitLight = nullptr;
 
-			//		rayDir = glm::normalize(hitPos - glm::dvec3(pointLights[i]));
+					rayDir = glm::normalize(hitPos - glm::dvec3(pointLights[i]));
 
-			//		traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
+					traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
 
-			//		if (octreeHit == oHitLight)
-			//		{
-			//			hitByLight = true;
+					if (octreeHit == oHitLight)
+					{
+						hitByLight = true;
+						//std::cout << "hit\n";
 
-			//			double ambientStrength = 0.00f;
-			//			glm::dvec3 ambient = lightColor * ambientStrength;
-			//			// diffuse 
-			//			//normal = -normal;
-			//			glm::dvec3 lightDir = glm::normalize(pointLights[i] - hitPos);
-			//			double diff = std::max(glm::dot(normal, lightDir), 0.f);
-			//			glm::dvec3 diffuse = lightColor * diff;
-			//			// specular
-			//			double specularStrength = 0.15;
-			//			glm::dvec3 viewDir = glm::normalize(camera.pos - hitPos);
-			//			glm::dvec3 reflectDir = reflect(-lightDir, normal);
-			//			double spec = pow(std::max(dot(viewDir, reflectDir), 0.f), 32.f);
-			//			glm::dvec3 specular = lightColor * specularStrength * spec;
-			//			glm::dvec3 result = (ambient + diffuse) * color + specular;
+						double ambientStrength = 0.00f;
+						glm::dvec3 ambient = lightColor * ambientStrength;
+						// diffuse 
+						normal = -normal;
+						glm::dvec3 lightDir = glm::normalize(pointLights[i] - hitPos);
+						double diff = max(glm::dot(normal, lightDir), 0.f);
+						glm::dvec3 diffuse = lightColor * diff;
+						// specular
+						double specularStrength = 0.15;
+						glm::dvec3 viewDir = glm::normalize(glm::dvec3(camera.pos) - hitPos);
+						glm::dvec3 reflectDir = reflect(-lightDir, normal);
+						double spec = pow(max(dot(viewDir, reflectDir), 0.f), 32.f);
+						glm::dvec3 specular = lightColor * specularStrength * spec;
+						glm::dvec3 result = (ambient + diffuse) * color + specular;
 
-			//			buffer[x][y] = glm::min(result, glm::dvec3(1.f));
-			//			//buffer[x][y] = abs(normal);
-			//			//buffer[x][y] = color;
-			//		}
-			//	}
-			//}
+						buffer[currentPixel.first][currentPixel.second] = glm::min(result, glm::dvec3(1.f));
+						//buffer[x][y] = abs(normal);
+						//buffer[x][y] = color;
+					}
+				}
+			}
 
-			buffer[currentPixel.first][currentPixel.second] = abs(normal);
+			//buffer[currentPixel.first][currentPixel.second] = abs(normal);
 
 			if (hitByLight == false)
 			{
@@ -782,7 +785,7 @@ bool VoxelScene::generateData(int x, int y, Camera& camera,
 	return false;
 }
 
-void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color, const unsigned int maxLevel)
+void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color)
 {
 	uint8_t level = 1;
 	float divLevel = 0.5f;
@@ -798,7 +801,7 @@ void VoxelScene::addPoint(glm::dvec3 pos, glm::vec3 color, const unsigned int ma
 		pos[i] -= int(pos[i]);
 	}
 
-	while (level < levels && level < maxLevel && currentTree->contains != OCTREE_CONTENT::FILLED)
+	while (level < levels && currentTree->contains != OCTREE_CONTENT::FILLED)
 	{
 		//If empty create tree
 		if (currentTree->contains == OCTREE_CONTENT::EMPTY)
@@ -963,7 +966,6 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 
 		std::string s1, s2, s3;
 		std::string s4, s5, s6;
-		std::string s7;
 
 		bool init = true;
 
@@ -975,7 +977,7 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 			//Adding a very small offset makes it disappear
 			glm::dvec3 point = glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos;
 
-			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::dvec3(stof(s4), stof(s5), stof(s6)), stoi(s7));
+			addPoint(glm::dvec3(stod(s1), stod(s2), stod(s3)) + pos, glm::dvec3(stof(s4), stof(s5), stof(s6)));
 
 			for (uint8_t i = 0; i < 3; i++)
 			{
@@ -1017,16 +1019,16 @@ bool VoxelScene::loadModel(glm::dvec3 pos, std::string file)
 
 void VoxelScene::receive()
 {
-	int size = sizeof(float) * 7;
-	float buff[7];
+	int size = sizeof(float) * 6;
+	float buff[6];
 
 	while (stop == false)
 	{
-		int n = client.reception((char*)buff, sizeof(float) * 7);
+		int n = client.reception((char*)buff, sizeof(float) * 6);
 
 		if (n > 0)
 		{
-			addPoint(glm::dvec3(buff[0], buff[1], buff[2]), glm::dvec3(buff[3], buff[4], buff[5]), buff[7]);
+			addPoint(glm::dvec3(buff[0], buff[1], buff[2]), glm::dvec3(buff[3], buff[4], buff[5]));
 		}
 	}
 }
