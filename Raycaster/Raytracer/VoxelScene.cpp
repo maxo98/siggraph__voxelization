@@ -655,7 +655,7 @@ void VoxelScene::drawPixels(std::queue<std::pair<int, int>>& pixels, std::mutex&
 
 					traceRay(worldMap, rayDir, pointLights[i], &oHitLight, filler, filler2);
 
-					if (octreeHit == oHitLight)
+					if (octreeHit == oHitLight || glm::distance(filler, hitPos) < (octSize*5))
 					{
 						hitByLight = true;
 						//std::cout << "hit\n";
